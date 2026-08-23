@@ -16,10 +16,10 @@
       min-height: 100dvh; padding: 16px 14px 40px; line-height: 1.45;
     }
     .brand { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--accent); font-weight: 800; }
-    h1 { font-size: 1.45rem; margin: 8px 0 4px; font-weight: 700; letter-spacing: -0.02em; }
-    .tagline { color: var(--mute); font-size: 0.9rem; margin-bottom: 8px; }
+    h1 { font-size: 1.4rem; margin: 8px 0 4px; font-weight: 700; letter-spacing: -0.02em; }
+    .tagline { color: var(--mute); font-size: 0.9rem; }
     .poem {
-      font-size: 0.82rem; color: var(--mute); font-style: italic;
+      font-size: 0.8rem; color: var(--mute); font-style: italic;
       border-left: 3px solid var(--fire); padding: 8px 0 8px 12px; margin: 12px 0 16px;
     }
     .card {
@@ -28,20 +28,15 @@
     }
     .label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
     .stage { color: var(--ok); font-weight: 700; margin-top: 4px; text-transform: capitalize; }
-    .next-title { font-size: 1.1rem; font-weight: 650; margin: 10px 0 6px; }
+    .next-title { font-size: 1.08rem; font-weight: 650; margin: 10px 0 6px; }
     .scope { color: var(--mute); font-size: 0.86rem; margin-bottom: 10px; }
-    .exec {
-      display: none; background: #0c1812; border: 1px solid #1e3d2e;
-      border-radius: 10px; padding: 10px 12px; font-size: 0.84rem;
-      color: var(--ok); margin-bottom: 12px; white-space: pre-wrap;
+    .exec, .letter, .script {
+      display: none; border-radius: 10px; padding: 10px 12px; font-size: 0.82rem;
+      margin-bottom: 10px; white-space: pre-wrap;
     }
-    .exec.show { display: block; }
-    .letter {
-      display: none; background: #121820; border: 1px solid var(--line);
-      border-radius: 10px; padding: 12px; font-size: 0.8rem;
-      color: #c5d0dc; margin-bottom: 12px; white-space: pre-wrap; font-family: ui-monospace, monospace;
-    }
-    .letter.show { display: block; }
+    .exec { background: #0c1812; border: 1px solid #1e3d2e; color: var(--ok); }
+    .letter, .script { background: #121820; border: 1px solid var(--line); color: #c5d0dc; font-family: ui-monospace, monospace; }
+    .exec.show, .letter.show, .script.show { display: block; }
     .actions { display: flex; flex-direction: column; gap: 8px; }
     button {
       border: none; border-radius: 12px; padding: 16px 18px;
@@ -49,7 +44,7 @@
     }
     .approve {
       background: linear-gradient(180deg, #6aade0, #3d7eb0);
-      color: #061018; letter-spacing: 0.02em;
+      color: #061018;
     }
     .approve:disabled { opacity: 0.4; }
     .secondary {
@@ -68,16 +63,16 @@
     .pulse { animation: pulse 1.2s ease infinite; }
     @keyframes pulse { 50% { opacity: 0.55; } }
     .foot { margin-top: 16px; font-size: 0.72rem; color: #5a6575; text-align: center; }
+    .vault { font-size: 0.8rem; color: var(--mute); margin-top: 6px; }
   </style>
 </head>
 <body>
-  <div class="brand">ONTRAC</div>
+  <div class="brand">ONTRAC · v0.3</div>
   <h1>One button.<br/>Their system.</h1>
   <p class="tagline">You approve. We move the machine.</p>
   <div class="poem">
-    The system shrugs at anyone who cannot operate it.<br/>
-    This is the other finger — pressed to one button —<br/>
-    until the loop closes.
+    One finger. One Approve.<br/>
+    The loop closes without handing the wall back.
   </div>
 
   <div class="card">
@@ -85,6 +80,7 @@
     <div style="margin-top:4px;font-weight:600" id="caseTitle">Tax recovery · 2019–2021</div>
     <div class="label" style="margin-top:12px">Stage</div>
     <div class="stage" id="stage">gather</div>
+    <div class="vault" id="vaultInfo">Case vault: empty</div>
   </div>
 
   <div class="card">
@@ -93,6 +89,7 @@
     <p class="scope" id="nextScope"></p>
     <div class="exec" id="execLog"></div>
     <div class="letter" id="letterBox"></div>
+    <div class="script" id="scriptBox"></div>
     <div class="actions">
       <button type="button" class="approve" id="btnApprove">Approve — do this for me</button>
       <button type="button" class="secondary" id="btnDefer">Pause case</button>
@@ -109,116 +106,130 @@
     <ul class="list" id="consentList"></ul>
   </div>
 
-  <p class="foot">Cubit Systems · Representation through consent · User-delegated bureaucracy = fail</p>
+  <p class="foot">Cubit · Representation through consent · Delegated bureaucracy = fail</p>
 
   <script>
 (function () {
-  const KEY = "ontrac_case_v2";
+  const KEY = "ontrac_case_v3";
   const defaultState = () => ({
     caseId: "case_" + Date.now().toString(36),
     stage: "gather",
     years: [2019, 2020, 2021],
     repLevel: "none",
+    vault: [],
     consent: [],
     tasks: [
-      {
-        id: "t1", title: "Open recovery case and name the walls",
-        status: "done",
-        run: async () => ({ log: "Case live. Walls recorded: calls, portals, paper. OnTrac owns the path through them." })
-      },
-      {
-        id: "t2", title: "Build the year-by-year recovery plan",
-        status: "done",
-        run: async () => ({ log: "Plan locked for 2019–2021. No checklist left on your plate." })
-      },
+      { id: "t1", title: "Open recovery case and name the walls", status: "done",
+        run: async () => ({ log: "Case live. Walls named. OnTrac owns the path." }) },
+      { id: "t2", title: "Build the year-by-year recovery plan", status: "done",
+        run: async () => ({ log: "Plan locked for 2019–2021." }) },
       {
         id: "t3", title: "Collect income documents into the case vault",
         status: "awaiting",
-        scope: "OnTrac may capture and store document images for this case only via Assimilate.",
+        scope: "OnTrac may open camera/files and store images only in this case vault.",
         run: async (ctx) => {
-          native("requestDocumentCapture", ctx.caseId, ctx.consentId);
-          return { log: "Capture pipeline open. Photos land in the vault under this case. You do not file, rename, or mail anything." };
+          return await new Promise((resolve) => {
+            window.onTracCaptureResult = function (ok, path) {
+              if (ok && path) {
+                ctx.state.vault.push({ path: path, ts: new Date().toISOString(), consent: ctx.consentId });
+                resolve({ log: "Document landed in case vault.\n" + path + "\nYou did not file or rename anything." });
+              } else {
+                resolve({ log: "Capture closed without a file. Approve again when ready — still our job.", block: true });
+              }
+            };
+            try {
+              if (window.OnTracNative) window.OnTracNative.requestDocumentCapture(ctx.caseId, ctx.consentId);
+              else {
+                ctx.state.vault.push({ path: "(browser demo) slip-placeholder.jpg", ts: new Date().toISOString() });
+                resolve({ log: "Demo vault entry added (native capture on APK)." });
+              }
+            } catch (e) {
+              resolve({ log: String(e), block: true });
+            }
+          });
         }
       },
       {
         id: "t4", title: "Run guided CRA access recovery inside OnTrac",
         status: "awaiting",
-        scope: "OnTrac may drive an in-app guided session for CRA access recovery. Passwords are never stored by OnTrac.",
+        scope: "OnTrac may run an in-app guided access session. Passwords are never stored.",
         run: async () => ({
-          log: "Guided session ready. OnTrac holds the steps. You only confirm identity when the portal forces a human checkpoint — we do not exile you to a bare website."
+          log: "Guided session prepared. OnTrac holds the steps; you only hit identity checkpoints the portal forces."
         })
       },
       {
-        id: "t5", title: "Prepare and file representative authorization",
+        id: "t5", title: "Prepare representative authorization",
         status: "awaiting",
-        scope: "OnTrac may prepare CRA Level 1 authorization so it can deal with CRA on your behalf for information on the recovery years.",
+        scope: "OnTrac may prepare CRA Level 1 authorization so it can obtain information on your behalf.",
         run: async (ctx) => {
           ctx.state.repLevel = "level_1";
-          return { log: "Authorization package prepared (Level 1 — disclose). OnTrac carries submission. Representation becomes possible after this lands." };
+          return { log: "Level 1 authorization package ready. Representation path open for information requests." };
         }
       },
       {
-        id: "t6", title: "Write and queue employer / CRA outreach",
+        id: "t6", title: "Draft outreach and arm voice script",
         status: "awaiting",
-        scope: "OnTrac may draft and queue written requests and authorized voice outreach for slips and filing status for 2019–2021.",
+        scope: "OnTrac may draft employer/CRA written outreach and arm the assisted voice script under this consent.",
         run: async (ctx) => {
           if (ctx.state.repLevel === "none") {
-            return { log: "OnTrac refused to half-measure: authorization not on file yet. Completing that first — not asking you to call.", block: true };
+            return { log: "Blocked on purpose: no authorization yet. OnTrac will finish that first — not you.", block: true };
           }
-          native("queueVoiceRepresentation", ctx.caseId, ctx.consentId, ctx.scope);
+          const years = ctx.state.years.join(", ");
           const letter =
-`Re: Request for income information — tax years 2019, 2020, 2021
+`Subject: Request for T4 / income slips — ${years}
 
-To whom it may concern,
+To Payroll / HR:
 
-We write on behalf of our client, who has authorized representation for this matter.
-Please provide copies of any T4 or equivalent slips issued for the years noted above,
-or confirm that no slips were issued.
+We write on behalf of our client, who authorized this request.
+Please provide T4 or equivalent slips for ${years}, or confirm none were issued.
 
-Reply to the address on file for this case. Reference: ${ctx.caseId}
+Case reference: ${ctx.caseId}
 
-— OnTrac Caseworker (authorized under client consent)`;
-          return { log: "Written outreach drafted and queued. Voice representation queued under the same consent. Follow-up belongs to OnTrac.", letter };
+— OnTrac Caseworker (client-authorized)`;
+          let scriptText = "";
+          try {
+            if (window.OnTracNative && window.OnTracNative.loadScript) {
+              scriptText = window.OnTracNative.loadScript("cra_assisted.json");
+            }
+          } catch (e) {}
+          if (!scriptText) {
+            scriptText = JSON.stringify({
+              opening: "Calling with authorization for tax years " + years + ".",
+              goals: ["Filing status", "Missing slips", "Reference number"]
+            }, null, 2);
+          }
+          try {
+            if (window.OnTracNative) {
+              window.OnTracNative.queueVoiceRepresentation(ctx.caseId, ctx.consentId, ctx.scope);
+              window.OnTracNative.shareOutreach(
+                "Request for T4 / income slips — " + years,
+                letter
+              );
+            }
+          } catch (e) {}
+          return { log: "Letter ready. System share sheet opened for send under your consent.\nVoice script armed.", letter, script: scriptText };
         }
       },
       {
         id: "t7", title: "Chase open loops until the case is quiet",
         status: "awaiting",
-        scope: "OnTrac may track deadlines, chase non-replies, and update this case without assigning monitoring homework to you.",
+        scope: "OnTrac may track and chase without making you the reminder system.",
         run: async () => ({
-          log: "Tracking armed. Reference numbers and deadlines stay on the case. When something moves, OnTrac moves next — not your memory."
+          log: "Tracking armed. When something moves, OnTrac moves next."
         })
       }
     ]
   });
 
   function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
+    try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch (e) {}
     return defaultState();
   }
-  function save(s) {
-    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
-  }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
 
   let state = load();
 
-  function native(fn, a, b, c) {
-    try {
-      if (window.OnTracNative && typeof window.OnTracNative[fn] === "function") {
-        if (c !== undefined) window.OnTracNative[fn](a, b, c);
-        else if (b !== undefined) window.OnTracNative[fn](a, b);
-        else window.OnTracNative[fn](a);
-      }
-    } catch (e) {}
-  }
-
-  function current() {
-    return state.tasks.find(t => t.status === "awaiting") || null;
-  }
-
+  function current() { return state.tasks.find(t => t.status === "awaiting") || null; }
   function stageFromProgress() {
     const n = state.tasks.filter(t => t.status === "done").length;
     if (n >= 7) return "follow up";
@@ -231,62 +242,52 @@ Reply to the address on file for this case. Reference: ${ctx.caseId}
   function render() {
     state.stage = stageFromProgress();
     document.getElementById("stage").textContent = state.stage;
-    document.getElementById("caseTitle").textContent =
-      "Tax recovery · " + state.years.join("–");
+    document.getElementById("caseTitle").textContent = "Tax recovery · " + state.years.join("–");
+    document.getElementById("vaultInfo").textContent =
+      "Case vault: " + (state.vault.length ? state.vault.length + " file(s)" : "empty");
     const t = current();
-    const exec = document.getElementById("execLog");
-    const letter = document.getElementById("letterBox");
-    exec.classList.remove("show");
-    letter.classList.remove("show");
+    ["execLog", "letterBox", "scriptBox"].forEach(id => document.getElementById(id).classList.remove("show"));
     const btn = document.getElementById("btnApprove");
     if (!t) {
       document.getElementById("nextTitle").textContent = "Loop quiet — for now";
-      document.getElementById("nextScope").textContent =
-        "OnTrac holds the case. When a new wall appears, one button opens it again.";
-      btn.disabled = true;
-      btn.classList.remove("pulse");
+      document.getElementById("nextScope").textContent = "OnTrac holds the case. One button when a new wall appears.";
+      btn.disabled = true; btn.classList.remove("pulse");
     } else {
-      btn.disabled = false;
-      btn.classList.add("pulse");
+      btn.disabled = false; btn.classList.add("pulse");
       document.getElementById("nextTitle").textContent = t.title;
-      document.getElementById("nextScope").textContent =
-        t.scope || "Approve and OnTrac performs the step. Nothing is dumped on you.";
+      document.getElementById("nextScope").textContent = t.scope || "Approve and OnTrac performs the step.";
     }
     document.getElementById("taskList").innerHTML = state.tasks.map(x =>
       `<li><span>${x.title}</span><span class="badge ${x.status==="done"?"done":x.status==="running"?"run":""}">${x.status}</span></li>`
     ).join("");
     document.getElementById("consentList").innerHTML = state.consent.length
-      ? state.consent.map(c =>
-          `<li><span>${c.summary}</span><span class="badge done">${c.decision}</span></li>`
-        ).join("")
-      : `<li><span>No approvals yet — the button is waiting</span><span class="badge">—</span></li>`;
+      ? state.consent.map(c => `<li><span>${c.summary}</span><span class="badge done">${c.decision}</span></li>`).join("")
+      : `<li><span>No approvals yet</span><span class="badge">—</span></li>`;
   }
 
   async function approve() {
     const t = current();
     if (!t) return;
     const consentId = "c_" + Date.now().toString(36);
-    state.consent.unshift({ summary: t.title, decision: "approve", id: consentId, ts: new Date().toISOString() });
+    state.consent.unshift({ summary: t.title, decision: "approve", id: consentId });
     t.status = "running";
     render();
     const ctx = { caseId: state.caseId, consentId, scope: t.scope, state };
     let result = { log: "Done." };
-    try {
-      result = await t.run(ctx) || result;
-    } catch (e) {
-      result = { log: String(e), block: true };
-    }
-    if (!result.block) t.status = "done";
-    else t.status = "awaiting";
+    try { result = await t.run(ctx) || result; } catch (e) { result = { log: String(e), block: true }; }
+    t.status = result.block ? "awaiting" : "done";
     const exec = document.getElementById("execLog");
-    exec.textContent = result.log;
-    exec.classList.add("show");
+    exec.textContent = result.log; exec.classList.add("show");
     if (result.letter) {
-      const box = document.getElementById("letterBox");
-      box.textContent = result.letter;
-      box.classList.add("show");
+      const el = document.getElementById("letterBox");
+      el.textContent = result.letter; el.classList.add("show");
     }
-    native("toast", result.block ? "OnTrac held the line" : "OnTrac moved");
+    if (result.script) {
+      const el = document.getElementById("scriptBox");
+      el.textContent = typeof result.script === "string" ? result.script : JSON.stringify(result.script, null, 2);
+      el.classList.add("show");
+    }
+    try { if (window.OnTracNative) window.OnTracNative.toast(result.block ? "Held" : "Moved"); } catch (e) {}
     save(state);
     render();
   }
@@ -295,11 +296,8 @@ Reply to the address on file for this case. Reference: ${ctx.caseId}
   document.getElementById("btnDefer").onclick = () => {
     const t = current();
     if (t) state.consent.unshift({ summary: t.title, decision: "pause" });
-    save(state);
-    render();
-    native("toast", "Case paused — still yours");
+    save(state); render();
   };
-
   render();
 })();
   </script>
