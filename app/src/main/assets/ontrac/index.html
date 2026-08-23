@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>OnTrac</title>
+  <style>
+    :root {
+      --bg: #0c1016; --card: #161d27; --line: #2a3444; --text: #eef3f8;
+      --mute: #8b97a8; --ok: #3dd68c; --accent: #4f9ad8; --warn: #e6b84d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100dvh; padding: 18px 14px 36px; line-height: 1.45;
+    }
+    .brand { font-size: 0.68rem; letter-spacing: 0.16em; color: var(--accent); font-weight: 800; }
+    h1 { font-size: 1.4rem; margin: 6px 0 4px; font-weight: 650; }
+    .sub { color: var(--mute); font-size: 0.88rem; margin-bottom: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .label { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
+    .stage { color: var(--ok); font-weight: 700; margin-top: 4px; }
+    .next-title { font-size: 1.08rem; font-weight: 650; margin: 8px 0 6px; }
+    .scope { color: var(--mute); font-size: 0.86rem; margin-bottom: 12px; }
+    .exec {
+      background: #0e1a14; border: 1px solid #1e3d2e; border-radius: 10px;
+      padding: 10px 12px; font-size: 0.84rem; color: var(--ok); margin-bottom: 12px;
+      display: none;
+    }
+    .exec.show { display: block; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      border: none; border-radius: 10px; padding: 14px 16px;
+      font-weight: 700; font-size: 0.95rem;
+    }
+    .approve { background: var(--accent); color: #061018; flex: 1; min-width: 140px; }
+    .secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    .list { list-style: none; margin-top: 6px; }
+    .list li {
+      padding: 9px 0; border-bottom: 1px solid var(--line);
+      font-size: 0.88rem; display: flex; justify-content: space-between; gap: 8px;
+    }
+    .list li:last-child { border-bottom: none; }
+    .badge { font-size: 0.68rem; color: var(--warn); white-space: nowrap; }
+    .badge.done { color: var(--ok); }
+    .badge.run { color: var(--accent); }
+    .doctrine {
+      font-size: 0.8rem; color: var(--mute);
+      border-left: 3px solid var(--accent); padding-left: 10px; margin: 12px 0 16px;
+    }
+    .fail-rule {
+      font-size: 0.75rem; color: #c08090; margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">ONTRAC · CASEWORKER</div>
+  <h1>Tax recovery</h1>
+  <p class="sub">You approve. OnTrac does the work.</p>
+  <div class="doctrine">
+    If a step would dump the hard part on you, the product has failed. Approve only authorizes OnTrac to act.
+  </div>
+
+  <div class="card">
+    <div class="label">Stage</div>
+    <div class="stage" id="stage">discover</div>
+    <div class="label" style="margin-top:10px">Years in recovery</div>
+    <div id="years" style="margin-top:4px">2019 · 2020 · 2021</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Next — OnTrac will perform</div>
+    <div class="next-title" id="nextTitle">—</div>
+    <p class="scope" id="nextScope"></p>
+    <div class="exec" id="execLog"></div>
+    <div class="actions">
+      <button type="button" class="approve" id="btnApprove">Approve — do this for me</button>
+      <button type="button" class="secondary" id="btnDefer">Pause</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Work OnTrac is carrying</div>
+    <ul class="list" id="taskList"></ul>
+  </div>
+
+  <div class="card">
+    <div class="label">Your approvals (audit)</div>
+    <ul class="list" id="consentList"></ul>
+  </div>
+
+  <p class="fail-rule">Product rule: user-delegated bureaucracy = fail. 90% stop if we hand the wall back to them.</p>
+
+  <script>
+(function () {
+  /**
+   * Tasks are SYSTEM-executed after consent.
+   * Titles describe what OnTrac does — never "You should call…"
+   */
+  const state = {
+    stage: "gather",
+    years: [2019, 2020, 2021],
+    repLevel: "none",
+    cursor: 0,
+    consent: [],
+    tasks: [
+      {
+        id: "t1",
+        title: "Map missing tax years into a recovery case",
+        status: "done",
+        system: true,
+        run: async (ctx) => ({ ok: true, log: "Case opened for 2019–2021. Barriers recorded: phone difficulty, unknown slip locations." })
+      },
+      {
+        id: "t2",
+        title: "Build document request plan (T4 / ROE / benefit slips)",
+        status: "done",
+        system: true,
+        run: async () => ({ ok: true, log: "Checklist built per year. No user homework assigned." })
+      },
+      {
+        id: "t3",
+        title: "Capture and file income documents into the case vault",
+        status: "awaiting",
+        system: true,
+        consentScope: "OnTrac may use Assimilate to capture document photos and store them only on this case.",
+        run: async (ctx) => {
+          try {
+            if (window.OnTracNative) window.OnTracNative.requestDocumentCapture(ctx.caseId, ctx.consentId);
+          } catch (e) {}
+          return { ok: true, log: "Assimilate capture pipeline started. OnTrac will attach slips to 2019–2021 as images arrive — you do not need to organize files." };
+        }
+      },
+      {
+        id: "t4",
+        title: "Prepare CRA My Account recovery path (system-guided session)",
+        status: "awaiting",
+        system: true,
+        consentScope: "OnTrac may open a guided recovery session and walk the portal steps inside the app. OnTrac will not store your CRA password.",
+        run: async () => ({
+          ok: true,
+          log: "Guided session prepared: OnTrac drives the checklist and field prompts in-app. You only confirm identity when the portal requires it — OnTrac does not send you away with a link and a prayer."
+        })
+      },
+      {
+        id: "t5",
+        title: "Prepare CRA representative authorization package",
+        status: "awaiting",
+        system: true,
+        consentScope: "OnTrac may prepare Level 1/Level 2 authorization materials and walk submission so OnTrac can represent you with CRA afterward.",
+        run: async (ctx) => {
+          ctx.repLevel = "level_1";
+          return { ok: true, log: "Authorization package prepared at Level 1 (disclose). OnTrac will complete submission steps with you present only where the portal forces a personal confirmation." };
+        }
+      },
+      {
+        id: "t6",
+        title: "Place authorized CRA / employer outreach (voice + written)",
+        status: "awaiting",
+        system: true,
+        consentScope: "OnTrac may contact CRA and/or employers on your behalf for slips and filing status for 2019–2021, using authorized representation and approved scripts.",
+        run: async (ctx) => {
+          if (ctx.repLevel === "none") {
+            return { ok: false, log: "OnTrac blocked itself: representation authorization not yet on file. Prior step will be completed first — not handed to you." };
+          }
+          try {
+            if (window.OnTracNative) window.OnTracNative.queueVoiceRepresentation("case_demo", ctx.consentId, ctx.scope);
+          } catch (e) {}
+          return { ok: true, log: "Outreach queued: written requests generated; voice representation queued under consent. OnTrac owns follow-up — you are not asked to call." };
+        }
+      },
+      {
+        id: "t7",
+        title: "Track replies, deadlines, and open loops until closed",
+        status: "awaiting",
+        system: true,
+        consentScope: "OnTrac may monitor this case, set follow-ups, and chase unanswered requests without assigning tracking homework to you.",
+        run: async () => ({ ok: true, log: "Tracking active. Deadlines and reference numbers stay on the case. OnTrac follows up until resolved or you pause the case." })
+      }
+    ]
+  };
+
+  const caseId = "case_pilot_tax";
+
+  function current() {
+    return state.tasks.find(t => t.status === "awaiting") || null;
+  }
+
+  function render() {
+    document.getElementById("stage").textContent = state.stage;
+    document.getElementById("years").textContent = state.years.join(" · ");
+    const t = current();
+    const exec = document.getElementById("execLog");
+    exec.classList.remove("show");
+    if (!t) {
+      document.getElementById("nextTitle").textContent = "All system tasks complete for this slice";
+      document.getElementById("nextScope").textContent = "OnTrac will open the next loop when new blockers appear.";
+      document.getElementById("btnApprove").disabled = true;
+    } else {
+      document.getElementById("btnApprove").disabled = false;
+      document.getElementById("nextTitle").textContent = t.title;
+      document.getElementById("nextScope").textContent = t.consentScope || "OnTrac performs this step after you Approve.";
+    }
+    document.getElementById("taskList").innerHTML = state.tasks.map(x =>
+      `<li><span>${x.title}</span><span class="badge ${x.status==='done'?'done':x.status==='running'?'run':''}">${x.status}</span></li>`
+    ).join("");
+    document.getElementById("consentList").innerHTML = state.consent.length
+      ? state.consent.map(c => `<li><span>${c.summary}</span><span class="badge done">${c.decision}</span></li>`).join("")
+      : `<li><span>No approvals yet</span><span class="badge">—</span></li>`;
+  }
+
+  async function approve() {
+    const t = current();
+    if (!t) return;
+    const consentId = "consent_" + Date.now();
+    state.consent.unshift({ summary: t.title, decision: "approve", id: consentId });
+    t.status = "running";
+    render();
+    const ctx = { caseId, consentId, scope: t.consentScope, repLevel: state.repLevel };
+    let result;
+    try {
+      result = await t.run(ctx);
+      if (ctx.repLevel && ctx.repLevel !== state.repLevel) state.repLevel = ctx.repLevel;
+      // allow run to mutate repLevel via ctx
+      if (t.id === "t5") state.repLevel = "level_1";
+    } catch (e) {
+      result = { ok: false, log: String(e) };
+    }
+    t.status = result.ok ? "done" : "awaiting";
+    const exec = document.getElementById("execLog");
+    exec.textContent = result.log;
+    exec.classList.add("show");
+    if (result.ok) {
+      // advance stage labels roughly
+      const done = state.tasks.filter(x => x.status === "done").length;
+      if (done >= 6) state.stage = "track";
+      else if (done >= 4) state.stage = "act";
+      else if (done >= 2) state.stage = "gather";
+    }
+    try {
+      if (window.OnTracNative) window.OnTracNative.toast(result.ok ? "OnTrac executed step" : "OnTrac held the step");
+    } catch (e) {}
+    render();
+  }
+
+  document.getElementById("btnApprove").onclick = approve;
+  document.getElementById("btnDefer").onclick = () => {
+    const t = current();
+    if (!t) return;
+    state.consent.unshift({ summary: t.title, decision: "pause" });
+    render();
+  };
+  render();
+})();
+  </script>
+</body>
+</html>
