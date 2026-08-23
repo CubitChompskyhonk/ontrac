@@ -1,0 +1,18 @@
+{
+  "id": "cra_assisted_v1",
+  "title": "CRA — assisted representation",
+  "mode": "assisted_or_authorized_speaker",
+  "requires_rep_level": ["level_1", "level_2", "legal_representative"],
+  "opening": "Hello, I'm calling with authorization to help obtain account information for tax years [YEARS]. The client has approved this contact. I can provide authorization details on file.",
+  "goals": [
+    "Confirm whether returns were filed for each recovery year",
+    "Request how to obtain missing slips or transcripts",
+    "Record any reference number given"
+  ],
+  "never": [
+    "Claim to be the taxpayer",
+    "Change direct deposit or address without Level 2+ and explicit consent",
+    "Share unrelated personal data"
+  ],
+  "close": "Thank you. Please note the reference number. We will follow up if documents do not arrive."
+}
