@@ -6,254 +6,300 @@
   <title>OnTrac</title>
   <style>
     :root {
-      --bg: #0c1016; --card: #161d27; --line: #2a3444; --text: #eef3f8;
-      --mute: #8b97a8; --ok: #3dd68c; --accent: #4f9ad8; --warn: #e6b84d;
+      --bg: #0a0d12; --card: #141a22; --line: #283140; --text: #f0f4f8;
+      --mute: #8b97a8; --ok: #3dd68c; --accent: #5b9fd4; --fire: #e8a045;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: var(--bg); color: var(--text);
-      min-height: 100dvh; padding: 18px 14px 36px; line-height: 1.45;
+      min-height: 100dvh; padding: 16px 14px 40px; line-height: 1.45;
     }
-    .brand { font-size: 0.68rem; letter-spacing: 0.16em; color: var(--accent); font-weight: 800; }
-    h1 { font-size: 1.4rem; margin: 6px 0 4px; font-weight: 650; }
-    .sub { color: var(--mute); font-size: 0.88rem; margin-bottom: 14px; }
+    .brand { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--accent); font-weight: 800; }
+    h1 { font-size: 1.45rem; margin: 8px 0 4px; font-weight: 700; letter-spacing: -0.02em; }
+    .tagline { color: var(--mute); font-size: 0.9rem; margin-bottom: 8px; }
+    .poem {
+      font-size: 0.82rem; color: var(--mute); font-style: italic;
+      border-left: 3px solid var(--fire); padding: 8px 0 8px 12px; margin: 12px 0 16px;
+    }
     .card {
       background: var(--card); border: 1px solid var(--line);
       border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
     }
-    .label { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
-    .stage { color: var(--ok); font-weight: 700; margin-top: 4px; }
-    .next-title { font-size: 1.08rem; font-weight: 650; margin: 8px 0 6px; }
-    .scope { color: var(--mute); font-size: 0.86rem; margin-bottom: 12px; }
+    .label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+    .stage { color: var(--ok); font-weight: 700; margin-top: 4px; text-transform: capitalize; }
+    .next-title { font-size: 1.1rem; font-weight: 650; margin: 10px 0 6px; }
+    .scope { color: var(--mute); font-size: 0.86rem; margin-bottom: 10px; }
     .exec {
-      background: #0e1a14; border: 1px solid #1e3d2e; border-radius: 10px;
-      padding: 10px 12px; font-size: 0.84rem; color: var(--ok); margin-bottom: 12px;
-      display: none;
+      display: none; background: #0c1812; border: 1px solid #1e3d2e;
+      border-radius: 10px; padding: 10px 12px; font-size: 0.84rem;
+      color: var(--ok); margin-bottom: 12px; white-space: pre-wrap;
     }
     .exec.show { display: block; }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    button {
-      border: none; border-radius: 10px; padding: 14px 16px;
-      font-weight: 700; font-size: 0.95rem;
+    .letter {
+      display: none; background: #121820; border: 1px solid var(--line);
+      border-radius: 10px; padding: 12px; font-size: 0.8rem;
+      color: #c5d0dc; margin-bottom: 12px; white-space: pre-wrap; font-family: ui-monospace, monospace;
     }
-    .approve { background: var(--accent); color: #061018; flex: 1; min-width: 140px; }
-    .secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    .letter.show { display: block; }
+    .actions { display: flex; flex-direction: column; gap: 8px; }
+    button {
+      border: none; border-radius: 12px; padding: 16px 18px;
+      font-weight: 800; font-size: 1rem; width: 100%;
+    }
+    .approve {
+      background: linear-gradient(180deg, #6aade0, #3d7eb0);
+      color: #061018; letter-spacing: 0.02em;
+    }
+    .approve:disabled { opacity: 0.4; }
+    .secondary {
+      background: transparent; color: var(--mute);
+      border: 1px solid var(--line); font-weight: 600; font-size: 0.9rem; padding: 12px;
+    }
     .list { list-style: none; margin-top: 6px; }
     .list li {
       padding: 9px 0; border-bottom: 1px solid var(--line);
-      font-size: 0.88rem; display: flex; justify-content: space-between; gap: 8px;
+      font-size: 0.86rem; display: flex; justify-content: space-between; gap: 8px;
     }
     .list li:last-child { border-bottom: none; }
-    .badge { font-size: 0.68rem; color: var(--warn); white-space: nowrap; }
+    .badge { font-size: 0.66rem; color: var(--fire); white-space: nowrap; }
     .badge.done { color: var(--ok); }
     .badge.run { color: var(--accent); }
-    .doctrine {
-      font-size: 0.8rem; color: var(--mute);
-      border-left: 3px solid var(--accent); padding-left: 10px; margin: 12px 0 16px;
-    }
-    .fail-rule {
-      font-size: 0.75rem; color: #c08090; margin-top: 14px;
-    }
+    .pulse { animation: pulse 1.2s ease infinite; }
+    @keyframes pulse { 50% { opacity: 0.55; } }
+    .foot { margin-top: 16px; font-size: 0.72rem; color: #5a6575; text-align: center; }
   </style>
 </head>
 <body>
-  <div class="brand">ONTRAC · CASEWORKER</div>
-  <h1>Tax recovery</h1>
-  <p class="sub">You approve. OnTrac does the work.</p>
-  <div class="doctrine">
-    If a step would dump the hard part on you, the product has failed. Approve only authorizes OnTrac to act.
+  <div class="brand">ONTRAC</div>
+  <h1>One button.<br/>Their system.</h1>
+  <p class="tagline">You approve. We move the machine.</p>
+  <div class="poem">
+    The system shrugs at anyone who cannot operate it.<br/>
+    This is the other finger — pressed to one button —<br/>
+    until the loop closes.
   </div>
 
   <div class="card">
-    <div class="label">Stage</div>
-    <div class="stage" id="stage">discover</div>
-    <div class="label" style="margin-top:10px">Years in recovery</div>
-    <div id="years" style="margin-top:4px">2019 · 2020 · 2021</div>
+    <div class="label">Case</div>
+    <div style="margin-top:4px;font-weight:600" id="caseTitle">Tax recovery · 2019–2021</div>
+    <div class="label" style="margin-top:12px">Stage</div>
+    <div class="stage" id="stage">gather</div>
   </div>
 
   <div class="card">
-    <div class="label">Next — OnTrac will perform</div>
+    <div class="label">OnTrac will do this next</div>
     <div class="next-title" id="nextTitle">—</div>
     <p class="scope" id="nextScope"></p>
     <div class="exec" id="execLog"></div>
+    <div class="letter" id="letterBox"></div>
     <div class="actions">
       <button type="button" class="approve" id="btnApprove">Approve — do this for me</button>
-      <button type="button" class="secondary" id="btnDefer">Pause</button>
+      <button type="button" class="secondary" id="btnDefer">Pause case</button>
     </div>
   </div>
 
   <div class="card">
-    <div class="label">Work OnTrac is carrying</div>
+    <div class="label">What OnTrac is carrying</div>
     <ul class="list" id="taskList"></ul>
   </div>
 
   <div class="card">
-    <div class="label">Your approvals (audit)</div>
+    <div class="label">Your approvals</div>
     <ul class="list" id="consentList"></ul>
   </div>
 
-  <p class="fail-rule">Product rule: user-delegated bureaucracy = fail. 90% stop if we hand the wall back to them.</p>
+  <p class="foot">Cubit Systems · Representation through consent · User-delegated bureaucracy = fail</p>
 
   <script>
 (function () {
-  /**
-   * Tasks are SYSTEM-executed after consent.
-   * Titles describe what OnTrac does — never "You should call…"
-   */
-  const state = {
+  const KEY = "ontrac_case_v2";
+  const defaultState = () => ({
+    caseId: "case_" + Date.now().toString(36),
     stage: "gather",
     years: [2019, 2020, 2021],
     repLevel: "none",
-    cursor: 0,
     consent: [],
     tasks: [
       {
-        id: "t1",
-        title: "Map missing tax years into a recovery case",
+        id: "t1", title: "Open recovery case and name the walls",
         status: "done",
-        system: true,
-        run: async (ctx) => ({ ok: true, log: "Case opened for 2019–2021. Barriers recorded: phone difficulty, unknown slip locations." })
+        run: async () => ({ log: "Case live. Walls recorded: calls, portals, paper. OnTrac owns the path through them." })
       },
       {
-        id: "t2",
-        title: "Build document request plan (T4 / ROE / benefit slips)",
+        id: "t2", title: "Build the year-by-year recovery plan",
         status: "done",
-        system: true,
-        run: async () => ({ ok: true, log: "Checklist built per year. No user homework assigned." })
+        run: async () => ({ log: "Plan locked for 2019–2021. No checklist left on your plate." })
       },
       {
-        id: "t3",
-        title: "Capture and file income documents into the case vault",
+        id: "t3", title: "Collect income documents into the case vault",
         status: "awaiting",
-        system: true,
-        consentScope: "OnTrac may use Assimilate to capture document photos and store them only on this case.",
+        scope: "OnTrac may capture and store document images for this case only via Assimilate.",
         run: async (ctx) => {
-          try {
-            if (window.OnTracNative) window.OnTracNative.requestDocumentCapture(ctx.caseId, ctx.consentId);
-          } catch (e) {}
-          return { ok: true, log: "Assimilate capture pipeline started. OnTrac will attach slips to 2019–2021 as images arrive — you do not need to organize files." };
+          native("requestDocumentCapture", ctx.caseId, ctx.consentId);
+          return { log: "Capture pipeline open. Photos land in the vault under this case. You do not file, rename, or mail anything." };
         }
       },
       {
-        id: "t4",
-        title: "Prepare CRA My Account recovery path (system-guided session)",
+        id: "t4", title: "Run guided CRA access recovery inside OnTrac",
         status: "awaiting",
-        system: true,
-        consentScope: "OnTrac may open a guided recovery session and walk the portal steps inside the app. OnTrac will not store your CRA password.",
+        scope: "OnTrac may drive an in-app guided session for CRA access recovery. Passwords are never stored by OnTrac.",
         run: async () => ({
-          ok: true,
-          log: "Guided session prepared: OnTrac drives the checklist and field prompts in-app. You only confirm identity when the portal requires it — OnTrac does not send you away with a link and a prayer."
+          log: "Guided session ready. OnTrac holds the steps. You only confirm identity when the portal forces a human checkpoint — we do not exile you to a bare website."
         })
       },
       {
-        id: "t5",
-        title: "Prepare CRA representative authorization package",
+        id: "t5", title: "Prepare and file representative authorization",
         status: "awaiting",
-        system: true,
-        consentScope: "OnTrac may prepare Level 1/Level 2 authorization materials and walk submission so OnTrac can represent you with CRA afterward.",
+        scope: "OnTrac may prepare CRA Level 1 authorization so it can deal with CRA on your behalf for information on the recovery years.",
         run: async (ctx) => {
-          ctx.repLevel = "level_1";
-          return { ok: true, log: "Authorization package prepared at Level 1 (disclose). OnTrac will complete submission steps with you present only where the portal forces a personal confirmation." };
+          ctx.state.repLevel = "level_1";
+          return { log: "Authorization package prepared (Level 1 — disclose). OnTrac carries submission. Representation becomes possible after this lands." };
         }
       },
       {
-        id: "t6",
-        title: "Place authorized CRA / employer outreach (voice + written)",
+        id: "t6", title: "Write and queue employer / CRA outreach",
         status: "awaiting",
-        system: true,
-        consentScope: "OnTrac may contact CRA and/or employers on your behalf for slips and filing status for 2019–2021, using authorized representation and approved scripts.",
+        scope: "OnTrac may draft and queue written requests and authorized voice outreach for slips and filing status for 2019–2021.",
         run: async (ctx) => {
-          if (ctx.repLevel === "none") {
-            return { ok: false, log: "OnTrac blocked itself: representation authorization not yet on file. Prior step will be completed first — not handed to you." };
+          if (ctx.state.repLevel === "none") {
+            return { log: "OnTrac refused to half-measure: authorization not on file yet. Completing that first — not asking you to call.", block: true };
           }
-          try {
-            if (window.OnTracNative) window.OnTracNative.queueVoiceRepresentation("case_demo", ctx.consentId, ctx.scope);
-          } catch (e) {}
-          return { ok: true, log: "Outreach queued: written requests generated; voice representation queued under consent. OnTrac owns follow-up — you are not asked to call." };
+          native("queueVoiceRepresentation", ctx.caseId, ctx.consentId, ctx.scope);
+          const letter =
+`Re: Request for income information — tax years 2019, 2020, 2021
+
+To whom it may concern,
+
+We write on behalf of our client, who has authorized representation for this matter.
+Please provide copies of any T4 or equivalent slips issued for the years noted above,
+or confirm that no slips were issued.
+
+Reply to the address on file for this case. Reference: ${ctx.caseId}
+
+— OnTrac Caseworker (authorized under client consent)`;
+          return { log: "Written outreach drafted and queued. Voice representation queued under the same consent. Follow-up belongs to OnTrac.", letter };
         }
       },
       {
-        id: "t7",
-        title: "Track replies, deadlines, and open loops until closed",
+        id: "t7", title: "Chase open loops until the case is quiet",
         status: "awaiting",
-        system: true,
-        consentScope: "OnTrac may monitor this case, set follow-ups, and chase unanswered requests without assigning tracking homework to you.",
-        run: async () => ({ ok: true, log: "Tracking active. Deadlines and reference numbers stay on the case. OnTrac follows up until resolved or you pause the case." })
+        scope: "OnTrac may track deadlines, chase non-replies, and update this case without assigning monitoring homework to you.",
+        run: async () => ({
+          log: "Tracking armed. Reference numbers and deadlines stay on the case. When something moves, OnTrac moves next — not your memory."
+        })
       }
     ]
-  };
+  });
 
-  const caseId = "case_pilot_tax";
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return defaultState();
+  }
+  function save(s) {
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+  }
+
+  let state = load();
+
+  function native(fn, a, b, c) {
+    try {
+      if (window.OnTracNative && typeof window.OnTracNative[fn] === "function") {
+        if (c !== undefined) window.OnTracNative[fn](a, b, c);
+        else if (b !== undefined) window.OnTracNative[fn](a, b);
+        else window.OnTracNative[fn](a);
+      }
+    } catch (e) {}
+  }
 
   function current() {
     return state.tasks.find(t => t.status === "awaiting") || null;
   }
 
+  function stageFromProgress() {
+    const n = state.tasks.filter(t => t.status === "done").length;
+    if (n >= 7) return "follow up";
+    if (n >= 6) return "track";
+    if (n >= 5) return "act";
+    if (n >= 3) return "gather";
+    return "diagnose";
+  }
+
   function render() {
+    state.stage = stageFromProgress();
     document.getElementById("stage").textContent = state.stage;
-    document.getElementById("years").textContent = state.years.join(" · ");
+    document.getElementById("caseTitle").textContent =
+      "Tax recovery · " + state.years.join("–");
     const t = current();
     const exec = document.getElementById("execLog");
+    const letter = document.getElementById("letterBox");
     exec.classList.remove("show");
+    letter.classList.remove("show");
+    const btn = document.getElementById("btnApprove");
     if (!t) {
-      document.getElementById("nextTitle").textContent = "All system tasks complete for this slice";
-      document.getElementById("nextScope").textContent = "OnTrac will open the next loop when new blockers appear.";
-      document.getElementById("btnApprove").disabled = true;
+      document.getElementById("nextTitle").textContent = "Loop quiet — for now";
+      document.getElementById("nextScope").textContent =
+        "OnTrac holds the case. When a new wall appears, one button opens it again.";
+      btn.disabled = true;
+      btn.classList.remove("pulse");
     } else {
-      document.getElementById("btnApprove").disabled = false;
+      btn.disabled = false;
+      btn.classList.add("pulse");
       document.getElementById("nextTitle").textContent = t.title;
-      document.getElementById("nextScope").textContent = t.consentScope || "OnTrac performs this step after you Approve.";
+      document.getElementById("nextScope").textContent =
+        t.scope || "Approve and OnTrac performs the step. Nothing is dumped on you.";
     }
     document.getElementById("taskList").innerHTML = state.tasks.map(x =>
-      `<li><span>${x.title}</span><span class="badge ${x.status==='done'?'done':x.status==='running'?'run':''}">${x.status}</span></li>`
+      `<li><span>${x.title}</span><span class="badge ${x.status==="done"?"done":x.status==="running"?"run":""}">${x.status}</span></li>`
     ).join("");
     document.getElementById("consentList").innerHTML = state.consent.length
-      ? state.consent.map(c => `<li><span>${c.summary}</span><span class="badge done">${c.decision}</span></li>`).join("")
-      : `<li><span>No approvals yet</span><span class="badge">—</span></li>`;
+      ? state.consent.map(c =>
+          `<li><span>${c.summary}</span><span class="badge done">${c.decision}</span></li>`
+        ).join("")
+      : `<li><span>No approvals yet — the button is waiting</span><span class="badge">—</span></li>`;
   }
 
   async function approve() {
     const t = current();
     if (!t) return;
-    const consentId = "consent_" + Date.now();
-    state.consent.unshift({ summary: t.title, decision: "approve", id: consentId });
+    const consentId = "c_" + Date.now().toString(36);
+    state.consent.unshift({ summary: t.title, decision: "approve", id: consentId, ts: new Date().toISOString() });
     t.status = "running";
     render();
-    const ctx = { caseId, consentId, scope: t.consentScope, repLevel: state.repLevel };
-    let result;
+    const ctx = { caseId: state.caseId, consentId, scope: t.scope, state };
+    let result = { log: "Done." };
     try {
-      result = await t.run(ctx);
-      if (ctx.repLevel && ctx.repLevel !== state.repLevel) state.repLevel = ctx.repLevel;
-      // allow run to mutate repLevel via ctx
-      if (t.id === "t5") state.repLevel = "level_1";
+      result = await t.run(ctx) || result;
     } catch (e) {
-      result = { ok: false, log: String(e) };
+      result = { log: String(e), block: true };
     }
-    t.status = result.ok ? "done" : "awaiting";
+    if (!result.block) t.status = "done";
+    else t.status = "awaiting";
     const exec = document.getElementById("execLog");
     exec.textContent = result.log;
     exec.classList.add("show");
-    if (result.ok) {
-      // advance stage labels roughly
-      const done = state.tasks.filter(x => x.status === "done").length;
-      if (done >= 6) state.stage = "track";
-      else if (done >= 4) state.stage = "act";
-      else if (done >= 2) state.stage = "gather";
+    if (result.letter) {
+      const box = document.getElementById("letterBox");
+      box.textContent = result.letter;
+      box.classList.add("show");
     }
-    try {
-      if (window.OnTracNative) window.OnTracNative.toast(result.ok ? "OnTrac executed step" : "OnTrac held the step");
-    } catch (e) {}
+    native("toast", result.block ? "OnTrac held the line" : "OnTrac moved");
+    save(state);
     render();
   }
 
   document.getElementById("btnApprove").onclick = approve;
   document.getElementById("btnDefer").onclick = () => {
     const t = current();
-    if (!t) return;
-    state.consent.unshift({ summary: t.title, decision: "pause" });
+    if (t) state.consent.unshift({ summary: t.title, decision: "pause" });
+    save(state);
     render();
+    native("toast", "Case paused — still yours");
   };
+
   render();
 })();
   </script>
