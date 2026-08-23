@@ -12,18 +12,16 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
-      - name: Setup Gradle wrapper
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.2"
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Create wrapper and build
         run: |
-          gradle wrapper --gradle-version 8.2 || true
-          if [ ! -f gradlew ]; then
-            curl -sL -o gradle.zip https://services.gradle.org/distributions/gradle-8.2-bin.zip
-            unzip -q gradle.zip
-            ./gradle-8.2/bin/gradle wrapper --gradle-version 8.2
-          fi
+          gradle wrapper --gradle-version 8.2
           chmod +x gradlew
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: ontrac-debug-apk
