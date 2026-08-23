@@ -1,0 +1,30 @@
+name: Build OnTrac APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Setup Gradle wrapper
+        run: |
+          gradle wrapper --gradle-version 8.2 || true
+          if [ ! -f gradlew ]; then
+            curl -sL -o gradle.zip https://services.gradle.org/distributions/gradle-8.2-bin.zip
+            unzip -q gradle.zip
+            ./gradle-8.2/bin/gradle wrapper --gradle-version 8.2
+          fi
+          chmod +x gradlew
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ontrac-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
