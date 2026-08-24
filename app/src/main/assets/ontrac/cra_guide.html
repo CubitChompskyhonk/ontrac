@@ -29,6 +29,7 @@
 <body>
   <div class="muted">ONTRAC HOLDS THIS SESSION · WD4</div>
   <h1>CRA access & year check</h1>
+  <p class="muted" id="lockoutBanner" style="display:none;color:#e8a045">Lockout path: OnTrac prioritizes recovery help. You are not hunting menus alone.</p>
   <p class="muted">OnTrac keeps the checklist. You only hit identity checkpoints. Answers you record here write back to the case — you do not email yourself a summary.</p>
 
   <div class="step" id="s1">
@@ -93,6 +94,10 @@
       return m ? decodeURIComponent(m[1]) : "";
     }
     var caseId = qs("id") || "";
+    if (qs("lockout") === "1") {
+      var b = document.getElementById("lockoutBanner");
+      if (b) b.style.display = "block";
+    }
     try {
       if (!caseId) {
         var raw = localStorage.getItem("ontrac_case_v3");
