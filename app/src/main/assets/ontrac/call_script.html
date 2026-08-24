@@ -5,77 +5,162 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>OnTrac · Live script</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0a0d12; color: #eef3f8; margin: 0; padding: 16px 16px 48px; }
-    .brand { font-size: 0.65rem; letter-spacing: 0.15em; color: #5b9fd4; font-weight: 800; }
+    body { font-family: system-ui, sans-serif; background: #080b0f; color: #eef3f8; margin: 0; padding: 16px 16px 56px; }
+    .brand { font-size: 0.62rem; letter-spacing: 0.16em; color: #e8a045; font-weight: 800; }
     h1 { font-size: 1.25rem; margin: 8px 0; }
-    .box { background: #141a22; border: 1px solid #283140; border-radius: 12px; padding: 14px; margin: 10px 0; }
-    .say { font-size: 1.05rem; line-height: 1.5; }
+    .box { background: #121820; border: 1px solid #2a3340; border-radius: 12px; padding: 14px; margin: 10px 0; }
+    .say { font-size: 1.02rem; line-height: 1.5; }
     .muted { color: #8b97a8; font-size: 0.85rem; }
     .never { color: #e08090; font-size: 0.85rem; }
-    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; background: #4f9ad8; color: #061018; }
-    .sec { background: transparent; color: #c5d0dc; border: 1px solid #283140; }
+    .tag { display: inline-block; font-size: 0.65rem; letter-spacing: 0.08em; color: #0a0d12; background: #e8a045; padding: 3px 8px; border-radius: 4px; font-weight: 800; margin-bottom: 8px; }
+    label { display: block; font-size: 0.8rem; color: #a8b4c0; margin: 10px 0 4px; }
+    select, input, textarea {
+      width: 100%; background: #0a0d12; border: 1px solid #2a3340; color: #eef3f8;
+      border-radius: 8px; padding: 10px; font-size: 0.9rem; box-sizing: border-box;
+    }
+    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; background: #e8a045; color: #0a0d12; }
+    .sec { background: transparent; color: #c5d0dc; border: 1px solid #2a3340; }
   </style>
 </head>
 <body>
-  <div class="brand">LIVE SCRIPT · ASSISTED</div>
-  <h1>CRA / employer call</h1>
-  <p class="muted">OnTrac speaks the structure. You stay in control. Authorization must already be on the case.</p>
+  <div class="brand">ONTRAC · LIVE SCRIPT · USER FINAL SAY</div>
+  <h1>You hold the line.<br/>We hold the words.</h1>
+  <p class="muted">The phone tree is their machine. This script is yours. Authorization must already be on the case — your Approve was the key.</p>
 
   <div class="box">
-    <div class="muted">OPEN WITH</div>
+    <div class="tag">OPEN</div>
     <p class="say" id="opening">Loading…</p>
   </div>
   <div class="box">
-    <div class="muted">GET</div>
+    <div class="tag">GET</div>
     <ul id="goals" class="say"></ul>
   </div>
   <div class="box">
-    <div class="muted">NEVER</div>
+    <div class="tag">NEVER</div>
     <ul id="never" class="never"></ul>
   </div>
   <div class="box">
-    <div class="muted">CLOSE</div>
+    <div class="tag">CLOSE</div>
     <p class="say" id="close"></p>
   </div>
 
-  <button type="button" id="dial">Open phone dialer</button>
-  <button type="button" class="sec" onclick="location.href='index.html'">Back to case — log outcome next</button>
+  <button type="button" id="dial">Open dialer</button>
+
+  <div class="box">
+    <div class="tag">OUTCOME → CASE</div>
+    <p class="muted">OnTrac files the result. You do not keep this in your head.</p>
+    <label>Result</label>
+    <select id="result">
+      <option value="">— select —</option>
+      <option value="reached">Reached a person / IVR path completed</option>
+      <option value="callback">Callback / wait required</option>
+      <option value="blocked">Blocked / hung up / no access</option>
+      <option value="info">Got information only</option>
+      <option value="ref">Got reference number</option>
+    </select>
+    <label>Reference number (if any)</label>
+    <input type="text" id="ref" placeholder="Optional" autocomplete="off" />
+    <label>What happened (no SIN)</label>
+    <textarea id="notes" rows="3" placeholder="Who you reached, what they said, what still blocks…"></textarea>
+    <button type="button" id="saveOut">Approve — save outcome to case</button>
+  </div>
+
+  <button type="button" class="sec" id="back">Back to case</button>
 
   <script>
-    var years = "2019, 2020, 2021";
-    try {
-      var raw = localStorage.getItem("ontrac_case_v3");
-      if (raw) { var st = JSON.parse(raw); if (st.years) years = st.years.join(", "); }
-    } catch (e) {}
-    var script = {
-      opening: "Hello, I am calling with authorization to help obtain account information for tax years " + years + ". The client has approved this contact.",
-      goals: ["Confirm filing status for each recovery year", "Ask how to obtain missing slips or transcripts", "Write down any reference number"],
-      never: ["Claim to be the taxpayer", "Change address or direct deposit without Level 2+ and explicit consent", "Share unrelated personal data"],
-      close: "Thank you. Please note the reference number. We will follow up if documents do not arrive."
-    };
-    try {
-      if (window.OnTracNative && OnTracNative.loadScript) {
-        var j = OnTracNative.loadScript("cra_assisted.json");
-        if (j) {
-          var p = JSON.parse(j);
-          if (p.opening) script.opening = p.opening.replace("[YEARS]", years);
-          if (p.goals) script.goals = p.goals;
-          if (p.never) script.never = p.never;
-          if (p.close) script.close = p.close;
-        }
+(function () {
+  function qs(n) {
+    var m = location.search.match(new RegExp("[?&]" + n + "=([^&]+)"));
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  var caseId = qs("id") || "";
+  try { if (!caseId) caseId = localStorage.getItem("ontrac_last_case_id") || ""; } catch (e) {}
+
+  var years = "2019, 2020, 2021";
+  try {
+    if (caseId && window.OnTracNative && OnTracNative.loadCase) {
+      var st = JSON.parse(OnTracNative.loadCase(caseId) || "{}");
+      if (st.years) years = st.years.join(", ");
+    }
+  } catch (e) {}
+
+  var script = {
+    opening: "Hello — I am calling with authorization on file to help obtain information for tax years " + years + ". The account holder approved this contact.",
+    goals: ["Filing status per recovery year", "How to obtain missing slips or transcripts", "Any reference number for the file"],
+    never: ["Claim to be the taxpayer without authority", "Change address or deposit without Level 2+ and a fresh Approve", "Hand over SIN in an unsafe channel"],
+    close: "Thank you. Please note the reference number. Follow-up stays on our case — not on the account holder’s memory."
+  };
+  try {
+    if (window.OnTracNative && OnTracNative.loadScript) {
+      var j = OnTracNative.loadScript("cra_assisted.json");
+      if (j) {
+        var p = JSON.parse(j);
+        if (p.opening) script.opening = p.opening.replace("[YEARS]", years);
+        if (p.goals) script.goals = p.goals;
+        if (p.never) script.never = p.never;
+        if (p.close) script.close = p.close;
       }
+    }
+  } catch (e) {}
+
+  document.getElementById("opening").textContent = script.opening;
+  document.getElementById("goals").innerHTML = script.goals.map(function (g) { return "<li>" + g + "</li>"; }).join("");
+  document.getElementById("never").innerHTML = script.never.map(function (g) { return "<li>" + g + "</li>"; }).join("");
+  document.getElementById("close").textContent = script.close;
+
+  document.getElementById("dial").onclick = function () {
+    try {
+      if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal("tel:");
+      else location.href = "tel:";
     } catch (e) {}
-    document.getElementById("opening").textContent = script.opening;
-    document.getElementById("goals").innerHTML = script.goals.map(function (g) { return "<li>" + g + "</li>"; }).join("");
-    document.getElementById("never").innerHTML = script.never.map(function (g) { return "<li>" + g + "</li>"; }).join("");
-    document.getElementById("close").textContent = script.close;
-    document.getElementById("dial").onclick = function () {
-      // CRA individual enquiries — user still may need provincial numbers; dialer opens blank for assisted entry
-      try {
-        if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal("tel:");
-        else location.href = "tel:";
-      } catch (e) {}
+  };
+
+  document.getElementById("back").onclick = function () {
+    if (caseId) location.href = "case.html?id=" + encodeURIComponent(caseId);
+    else location.href = "index.html";
+  };
+
+  document.getElementById("saveOut").onclick = function () {
+    var result = document.getElementById("result").value;
+    if (!result) {
+      try { if (window.OnTracNative) OnTracNative.toast("Select a result"); } catch (e) {}
+      return;
+    }
+    if (!caseId) {
+      try { if (window.OnTracNative) OnTracNative.toast("No case id"); } catch (e) {}
+      return;
+    }
+    var outcome = {
+      ts: new Date().toISOString(),
+      result: result,
+      reference: (document.getElementById("ref").value || "").trim(),
+      notes: (document.getElementById("notes").value || "").trim(),
+      source: "call_script_wd5"
     };
+    try {
+      var raw = OnTracNative.loadCase(caseId);
+      var st = JSON.parse(raw);
+      st.callOutcome = outcome;
+      st.consent = st.consent || [];
+      st.consent.unshift({ summary: "Call outcome: " + result, decision: "approve", id: "c_call_" + Date.now() });
+      (st.tasks || []).forEach(function (t) {
+        if (t.id === "t6" || t.id === "t7") {
+          if (t.id === "t6" && t.status !== "done") t.status = "done";
+        }
+      });
+      // ensure track task advances
+      (st.tasks || []).forEach(function (t) {
+        if (t.id === "t7" && result === "ref") t.status = "done";
+      });
+      st.stage = "track";
+      OnTracNative.saveCase(caseId, JSON.stringify(st));
+      try { if (window.OnTracNative) OnTracNative.toast("Outcome on case · Track"); } catch (e) {}
+      location.href = "case.html?id=" + encodeURIComponent(caseId);
+    } catch (e) {
+      try { if (window.OnTracNative) OnTracNative.toast("Save failed"); } catch (err) {}
+    }
+  };
+})();
   </script>
 </body>
 </html>
