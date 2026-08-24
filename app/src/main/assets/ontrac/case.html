@@ -74,6 +74,9 @@
     <div class="vault" id="vaultInfo">Case vault: empty</div>
     <div class="vault" id="craGuideBox" style="display:none;margin-top:8px"></div>
     <div class="vault" id="callOutBox" style="display:none;margin-top:8px"></div>
+    <div class="vault" id="outreachBox" style="display:none;margin-top:8px"></div>
+    <button type="button" class="secondary" id="btnOutreach" style="margin-top:10px">Outreach desk</button>
+    <button type="button" class="secondary" id="btnCall" style="margin-top:8px">Call script</button>
     <button type="button" class="secondary" id="btnVault" style="margin-top:10px">Open case vault</button>
   </div>
 
@@ -193,28 +196,18 @@
           }
         },
         {
-          id: "t6", title: "Draft outreach and arm voice script", status: "awaiting",
-          scope: "OnTrac may draft written outreach and arm the assisted voice script under this consent.",
+          id: "t6", title: "Send outreach (OnTrac writes the letter)", status: "awaiting",
+          scope: "OnTrac may draft the letter after you name the recipient once, then open send under this Approve.",
           run: async function (ctx) {
             if (ctx.state.repLevel === "none") {
-              return { log: "Blocked: authorization not on file. OnTrac finishes that first.", block: true };
+              return { log: "Blocked: authorization not on file. OnTrac finishes that first — not you.", block: true };
             }
-            var years = ctx.state.years.join(", ");
-            var letter = "Subject: Request for T4 / income slips — " + years + "\n\nTo Payroll / HR:\n\nWe write on behalf of our client, who authorized this request.\nPlease provide T4 or equivalent slips for " + years + ", or confirm none were issued.\n\nCase reference: " + ctx.caseId + "\n\n— OnTrac Caseworker (client-authorized)";
-            var scriptText = "";
-            try {
-              if (window.OnTracNative && window.OnTracNative.loadScript)
-                scriptText = window.OnTracNative.loadScript("cra_assisted.json");
-            } catch (e) {}
-            try {
-              if (window.OnTracNative) {
-                window.OnTracNative.queueVoiceRepresentation(ctx.caseId, ctx.consentId, ctx.scope);
-                window.OnTracNative.shareOutreach("Request for T4 / income slips — " + years, letter);
-              }
-            } catch (e) {}
-            setTimeout(function () { location.href = "call_script.html?id=" + encodeURIComponent(state.caseId); }, 900);
-            return { log: "Letter ready · share opened · call script opening.", letter: letter, script: scriptText || "See call_script.html" };
+            setTimeout(function () {
+              location.href = "outreach.html?id=" + encodeURIComponent(state.caseId);
+            }, 350);
+            return { log: "Opening outreach — you name the recipient once. OnTrac writes and opens send." };
           }
+        }
         },
         {
           id: "t7", title: "Chase open loops until the case is quiet", status: "awaiting",
@@ -289,6 +282,11 @@
         (state.callOutcome.reference ? (" · ref " + state.callOutcome.reference) : "") +
         (state.callOutcome.notes ? (" · " + state.callOutcome.notes) : "");
     } else if (co) { co.style.display = "none"; }
+    var ob = document.getElementById("outreachBox");
+    if (ob && state.outreach) {
+      ob.style.display = "block";
+      ob.textContent = "Outreach: " + (state.outreach.to || "") + " · " + (state.outreach.status || "draft");
+    } else if (ob) { ob.style.display = "none"; }
     var t = current();
     ["execLog", "letterBox", "scriptBox"].forEach(function (id) {
       document.getElementById(id).classList.remove("show");
@@ -344,6 +342,12 @@
 
   document.getElementById("btnVault").onclick = function () {
     location.href = "vault.html?id=" + encodeURIComponent(state.caseId);
+  };
+  document.getElementById("btnOutreach").onclick = function () {
+    location.href = "outreach.html?id=" + encodeURIComponent(state.caseId);
+  };
+  document.getElementById("btnCall").onclick = function () {
+    location.href = "call_script.html?id=" + encodeURIComponent(state.caseId);
   };
   document.getElementById("btnApprove").onclick = approve;
   document.getElementById("btnExportCase").onclick = function () {
