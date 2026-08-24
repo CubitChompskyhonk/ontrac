@@ -80,6 +80,10 @@
     <button type="button" class="secondary" id="btnVault" style="margin-top:10px">Open case vault</button>
   </div>
 
+  <div class="card" id="awarenessCard" style="display:none;border-color:#5a4030">
+    <div class="label" style="color:#e8a045">Awareness</div>
+    <p style="font-size:0.86rem;color:#c8d2dc;margin-top:6px">Recovering years can mean a large refund or credit. That can affect other income-tested benefits. OnTrac does not hide what you may pursue — decide with eyes open.</p>
+  </div>
   <div class="card">
     <div class="label">OnTrac will do this next</div>
     <div class="next-title" id="nextTitle">—</div>
@@ -261,6 +265,11 @@
     state.stage = stageFromProgress();
     document.getElementById("heading").textContent = (state.title || "Tax recovery") + " · " + (state.years || []).join("–");
     document.getElementById("stage").textContent = state.stage;
+    var aw = document.getElementById("awarenessCard");
+    if (aw) {
+      var showAw = (state.stage === "act" || state.stage === "track" || state.stage === "gather");
+      aw.style.display = showAw ? "block" : "none";
+    }
     var vaultCount = (state.vault && state.vault.length) ? state.vault.length : 0;
     try {
       if (window.OnTracNative && OnTracNative.listVault) {
