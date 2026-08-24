@@ -197,10 +197,13 @@ public class MainActivity extends AppCompatActivity {
                     if (!f.isFile()) continue;
                     if (!first) sb.append(",");
                     first = false;
-                    sb.append("{"name":"").append(f.getName().replace(""", ""))
-                      .append("","path":"").append(f.getAbsolutePath().replace("\\", "/").replace(""", ""))
-                      .append("","size":").append(f.length())
-                      .append(","modified":").append(f.lastModified()).append("}");
+                    String name = f.getName().replace("\", "\\").replace("\"", "\\"");
+                    String path = f.getAbsolutePath().replace("\", "/").replace("\"", "\\"");
+                    sb.append("{\"name\":\"").append(name).append("\"");
+                    sb.append(",\"path\":\"").append(path).append("\"");
+                    sb.append(",\"size\":").append(f.length());
+                    sb.append(",\"modified\":").append(f.lastModified());
+                    sb.append("}");
                 }
                 sb.append("]");
                 return sb.toString();
