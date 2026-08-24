@@ -72,6 +72,7 @@
     <div class="label">Stage</div>
     <div class="stage" id="stage">—</div>
     <div class="vault" id="vaultInfo">Case vault: empty</div>
+    <div class="vault" id="craGuideBox" style="display:none;margin-top:8px"></div>
     <button type="button" class="secondary" id="btnVault" style="margin-top:10px">Open case vault</button>
   </div>
 
@@ -178,7 +179,7 @@
           id: "t4", title: "Run guided CRA access recovery inside OnTrac", status: "awaiting",
           scope: "OnTrac may run an in-app guided session. Passwords are never stored.",
           run: async function () {
-            setTimeout(function () { location.href = "cra_guide.html"; }, 400);
+            setTimeout(function () { location.href = "cra_guide.html?id=" + encodeURIComponent(state.caseId); }, 400);
             return { log: "Opening guided CRA session — checklist stays with OnTrac." };
           }
         },
@@ -274,6 +275,12 @@
       }
     } catch (e) {}
     document.getElementById("vaultInfo").textContent = "Case vault: " + (vaultCount ? vaultCount + " file(s)" : "empty");
+    var cg = document.getElementById("craGuideBox");
+    if (state.craGuide) {
+      cg.style.display = "block";
+      cg.textContent = "CRA guide: access=" + state.craGuide.access + " · years=" + state.craGuide.yearsStatus +
+        (state.craGuide.notes ? (" · " + state.craGuide.notes) : "");
+    } else { cg.style.display = "none"; }
     var t = current();
     ["execLog", "letterBox", "scriptBox"].forEach(function (id) {
       document.getElementById(id).classList.remove("show");
@@ -355,6 +362,7 @@
     try { if (window.OnTracNative) window.OnTracNative.toast("Paused — still on disk"); } catch (e) {}
   };
 
+  try { localStorage.setItem("ontrac_last_case_id", state.caseId); } catch (e) {}
   persist(state);
   render();
 })();
