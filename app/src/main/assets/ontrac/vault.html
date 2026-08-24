@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>OnTrac · Case vault</title>
+  <style>
+    :root {
+      --bg: #0a0d12; --card: #141a22; --line: #283140; --text: #f0f4f8;
+      --mute: #8b97a8; --ok: #3dd68c; --accent: #5b9fd4; --bad: #e08090;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100dvh; padding: 16px 14px 40px; line-height: 1.45;
+    }
+    .brand { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--accent); font-weight: 800; }
+    h1 { font-size: 1.25rem; margin: 8px 0; }
+    a { color: var(--mute); font-size: 0.85rem; text-decoration: none; }
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px; margin: 10px 0;
+    }
+    .row {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem;
+    }
+    .row:last-child { border-bottom: none; }
+    .meta { color: var(--mute); font-size: 0.75rem; }
+    button {
+      border: none; border-radius: 10px; padding: 12px 14px; font-weight: 700; font-size: 0.85rem;
+    }
+    .primary { background: #4f9ad8; color: #061018; width: 100%; margin-top: 8px; padding: 14px; }
+    .danger { background: transparent; color: var(--bad); border: 1px solid #5a3038; }
+    .muted { color: var(--mute); font-size: 0.88rem; }
+    .scope { font-size: 0.8rem; color: var(--mute); margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div class="brand">CASE VAULT</div>
+    <a id="back" href="index.html">Back</a>
+  </div>
+  <h1>Documents on this case</h1>
+  <p class="muted">OnTrac stores captures here. Delete only after you Approve.</p>
+
+  <div class="card">
+    <div id="list"><p class="muted">Loading…</p></div>
+    <p class="scope" id="count"></p>
+    <button type="button" class="primary" id="btnAdd">Approve — capture another document</button>
+  </div>
+
+  <div class="card" id="delPanel" style="display:none">
+    <p>Delete <strong id="delName"></strong> from this case vault?</p>
+    <p class="scope">This only removes the file from OnTrac’s case vault on this device.</p>
+    <button type="button" class="danger" id="btnConfirmDel" style="width:100%;margin-top:8px">Approve delete</button>
+    <button type="button" class="primary" id="btnCancelDel" style="background:#283140;color:#eef3f8;margin-top:8px">Cancel</button>
+  </div>
+
+  <script>
+(function () {
+  function qs(n) {
+    var m = location.search.match(new RegExp("[?&]" + n + "=([^&]+)"));
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  var caseId = qs("id") || "default";
+  document.getElementById("back").href = "case.html?id=" + encodeURIComponent(caseId);
+
+  var pendingDelete = null;
+
+  function listFiles() {
+    try {
+      if (window.OnTracNative && OnTracNative.listVault) {
+        return JSON.parse(OnTracNative.listVault(caseId) || "[]");
+      }
+    } catch (e) {}
+    return [];
+  }
+
+  function render() {
+    var files = listFiles();
+    var el = document.getElementById("list");
+    document.getElementById("count").textContent = files.length + " file(s) in vault · target stability: 3+ captures";
+    if (!files.length) {
+      el.innerHTML = '<p class="muted">Vault empty. Approve capture to add a document — OnTrac files it.</p>';
+      return;
+    }
+    el.innerHTML = files.map(function (f) {
+      var kb = Math.max(1, Math.round((f.size || 0) / 1024));
+      return '<div class="row"><div><div>' + (f.name || "file") + '</div><div class="meta">' + kb + ' KB</div></div>' +
+        '<button type="button" class="danger" data-name="' + (f.name || "") + '">Delete</button></div>';
+    }).join("");
+    el.querySelectorAll("button[data-name]").forEach(function (btn) {
+      btn.onclick = function () {
+        pendingDelete = btn.getAttribute("data-name");
+        document.getElementById("delName").textContent = pendingDelete;
+        document.getElementById("delPanel").style.display = "block";
+      };
+    });
+  }
+
+  document.getElementById("btnCancelDel").onclick = function () {
+    pendingDelete = null;
+    document.getElementById("delPanel").style.display = "none";
+  };
+  document.getElementById("btnConfirmDel").onclick = function () {
+    if (!pendingDelete) return;
+    try {
+      if (window.OnTracNative && OnTracNative.deleteVaultFile) {
+        OnTracNative.deleteVaultFile(caseId, pendingDelete);
+      }
+    } catch (e) {}
+    // consent-style note on case if possible
+    try {
+      var raw = window.OnTracNative && OnTracNative.loadCase ? OnTracNative.loadCase(caseId) : "";
+      if (raw) {
+        var st = JSON.parse(raw);
+        st.consent = st.consent || [];
+        st.consent.unshift({ summary: "Delete vault file " + pendingDelete, decision: "approve", id: "c_del_" + Date.now() });
+        OnTracNative.saveCase(caseId, JSON.stringify(st));
+      }
+    } catch (e) {}
+    pendingDelete = null;
+    document.getElementById("delPanel").style.display = "none";
+    try { if (window.OnTracNative) OnTracNative.toast("Removed from vault"); } catch (e) {}
+    render();
+  };
+
+  document.getElementById("btnAdd").onclick = function () {
+    window.onTracCaptureResult = function (ok, path) {
+      if (ok) {
+        try {
+          var raw = window.OnTracNative && OnTracNative.loadCase ? OnTracNative.loadCase(caseId) : "";
+          if (raw) {
+            var st = JSON.parse(raw);
+            st.vault = st.vault || [];
+            st.vault.push({ path: path, ts: new Date().toISOString() });
+            st.consent = st.consent || [];
+            st.consent.unshift({ summary: "Vault capture", decision: "approve", id: "c_cap_" + Date.now() });
+            OnTracNative.saveCase(caseId, JSON.stringify(st));
+          }
+        } catch (e) {}
+        try { if (window.OnTracNative) OnTracNative.toast("In vault"); } catch (e) {}
+      }
+      render();
+    };
+    try {
+      if (window.OnTracNative) OnTracNative.requestDocumentCapture(caseId, "vault_ui");
+      else alert("Open on APK for camera/file capture");
+    } catch (e) {}
+  };
+
+  render();
+})();
+  </script>
+</body>
+</html>
