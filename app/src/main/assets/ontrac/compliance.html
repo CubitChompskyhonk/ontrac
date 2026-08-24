@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>OnTrac · Compliance</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #080b0f; color: #eef3f8; margin: 0; padding: 16px 16px 48px; line-height: 1.5; }
+    .brand { font-size: 0.62rem; letter-spacing: 0.16em; color: #5b9fd4; font-weight: 800; }
+    h1 { font-size: 1.25rem; margin: 8px 0; }
+    .card { background: #121820; border: 1px solid #2a3340; border-radius: 12px; padding: 14px; margin: 10px 0; }
+    h2 { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: #5b9fd4; margin-bottom: 8px; }
+    ul { padding-left: 1.1rem; font-size: 0.9rem; color: #c8d2dc; }
+    li { margin: 6px 0; }
+    .warn { border-color: #5a4030; }
+    .warn h2 { color: #e8a045; }
+    label { display: flex; gap: 10px; align-items: flex-start; font-size: 0.88rem; margin: 10px 0; }
+    input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; }
+    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; background: #4f9ad8; color: #061018; }
+    button:disabled { opacity: 0.35; }
+    .sec { background: transparent; color: #c5d0dc; border: 1px solid #2a3340; }
+    .muted { color: #8b97a8; font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+  <div class="brand">ONTRAC · WD7 COMPLIANCE</div>
+  <h1>Rules of engagement</h1>
+  <p class="muted">Priya’s pass: plain language on authority, limits, and awareness. Required before pilot.</p>
+
+  <div class="card">
+    <h2>Representative levels (CRA)</h2>
+    <ul>
+      <li><strong>Level 1</strong> — mainly disclosure of information</li>
+      <li><strong>Level 2</strong> — certain account changes (address, direct deposit, etc.)</li>
+      <li>Legal representative / POA is a separate path with formal documents</li>
+      <li>OnTrac will not claim powers you have not authorized through official channels</li>
+    </ul>
+  </div>
+
+  <div class="card warn">
+    <h2>Awareness — large refunds & benefits</h2>
+    <ul>
+      <li>Recovering years can produce a large refund or credit</li>
+      <li>A large payment can affect other income-tested supports</li>
+      <li>OnTrac will not hide money you are entitled to pursue; we surface the awareness so you decide with eyes open</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>What we will not do</h2>
+    <ul>
+      <li>Store CRA passwords</li>
+      <li>Guarantee refund amounts or outcomes</li>
+      <li>Act as your lawyer or licensed tax preparer unless that path is explicitly engaged later</li>
+      <li>Expand scope past a specific Approve</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Sign-off</h2>
+    <label><input type="checkbox" id="a1" /> I understand Level 1 vs Level 2 limits.</label>
+    <label><input type="checkbox" id="a2" /> I understand large refunds/credits can interact with other benefits.</label>
+    <label><input type="checkbox" id="a3" /> I understand OnTrac is not a guarantee of results and is not legal advice.</label>
+    <button type="button" id="go" disabled>Sign off — return to cases</button>
+    <button type="button" class="sec" onclick="location.href='index.html'">Cancel</button>
+  </div>
+
+  <script>
+    function sync() {
+      document.getElementById("go").disabled = !(
+        document.getElementById("a1").checked &&
+        document.getElementById("a2").checked &&
+        document.getElementById("a3").checked
+      );
+    }
+    ["a1","a2","a3"].forEach(function (id) {
+      document.getElementById(id).onchange = sync;
+    });
+    document.getElementById("go").onclick = function () {
+      var receipt = {
+        ts: new Date().toISOString(),
+        version: "wd7-compliance-v1",
+        items: ["level_1_2_limits", "refund_benefit_awareness", "no_guarantee_not_legal_advice"]
+      };
+      try {
+        localStorage.setItem("ontrac_compliance_v1", JSON.stringify(receipt));
+        if (window.OnTracNative && OnTracNative.saveCase)
+          OnTracNative.saveCase("_compliance", JSON.stringify(receipt));
+        if (window.OnTracNative) OnTracNative.toast("Compliance on record");
+      } catch (e) {}
+      location.href = "index.html";
+    };
+  </script>
+</body>
+</html>
