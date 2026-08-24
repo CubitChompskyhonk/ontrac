@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>OnTrac · CRA guide</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0a0d12; color: #eef3f8; margin: 0; padding: 16px; line-height: 1.45; }
+    body { font-family: system-ui, sans-serif; background: #0a0d12; color: #eef3f8; margin: 0; padding: 16px 16px 48px; line-height: 1.45; }
     h1 { font-size: 1.2rem; }
     .muted { color: #8b97a8; font-size: 0.88rem; }
     .step { background: #141a22; border: 1px solid #283140; border-radius: 12px; padding: 14px; margin: 10px 0; }
@@ -14,46 +14,172 @@
     button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; }
     .go { background: #4f9ad8; color: #061018; }
     .sec { background: transparent; color: #c5d0dc; border: 1px solid #283140; }
-    a { color: #6aade0; }
+    label { display: block; font-size: 0.88rem; margin: 8px 0 4px; color: #a8b4c0; }
+    select, textarea, input[type=text] {
+      width: 100%; background: #0c1016; border: 1px solid #283140; color: #eef3f8;
+      border-radius: 8px; padding: 10px; font-size: 0.9rem;
+    }
+    .warn { color: #e0a070; font-size: 0.8rem; margin-top: 6px; }
+    .prompt {
+      background: #0c1812; border: 1px solid #1e3d2e; border-radius: 8px;
+      padding: 10px; font-size: 0.82rem; color: #9dccb0; margin: 8px 0; white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <div class="muted">ONTRAC HOLDS THIS SESSION</div>
-  <h1>CRA access recovery</h1>
-  <p class="muted">You do not wander the portal alone. Complete the checkpoint OnTrac highlights. Passwords stay yours — never stored here.</p>
+  <div class="muted">ONTRAC HOLDS THIS SESSION · WD4</div>
+  <h1>CRA access & year check</h1>
+  <p class="muted">OnTrac keeps the checklist. You only hit identity checkpoints. Answers you record here write back to the case — you do not email yourself a summary.</p>
 
   <div class="step" id="s1">
-    <div class="n">STEP 1</div>
-    <p>Open CRA sign-in options (My Account).</p>
-    <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services.html')">Open CRA login help</button>
+    <div class="n">STEP 1 · OFFICIAL HELP</div>
+    <p>Open CRA sign-in / recovery help (OnTrac stays with you).</p>
+    <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services.html')">Open CRA login services</button>
+    <button class="sec" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services/help-cra-sign-in-services.html')">Open recovery help</button>
     <button class="sec" type="button" onclick="mark(1)">Mark done</button>
   </div>
+
   <div class="step" id="s2">
-    <div class="n">STEP 2</div>
-    <p>If locked out: recover CRA user ID / password with their official recovery — OnTrac stays on this screen as your checklist.</p>
-    <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services/help-cra-sign-in-services.html')">Open recovery help</button>
+    <div class="n">STEP 2 · CRA GenAI CHATBOT (GENERAL ONLY)</div>
+    <p>CRA’s GenAI chatbot answers general program questions 24/7. <strong>Do not enter SIN, name, or account details.</strong></p>
+    <p class="warn">OnTrac opens the official page. Copy a safe prompt below — never paste personal data into the bot.</p>
+    <div class="prompt" id="safePrompt">How do I register for a CRA account if I am locked out?</div>
+    <button class="sec" type="button" onclick="copyPrompt()">Copy safe prompt</button>
+    <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/corporate/contact-information/cra-chatbot.html')">Open CRA GenAI chatbot page</button>
     <button class="sec" type="button" onclick="mark(2)">Mark done</button>
   </div>
+
   <div class="step" id="s3">
-    <div class="n">STEP 3</div>
-    <p>When signed in, note whether returns appear for 2019–2021. OnTrac will record what you report next — you are not asked to email yourself a summary.</p>
-    <button class="sec" type="button" onclick="mark(3)">I checked the years</button>
+    <div class="n">STEP 3 · WHAT YOU SAW (WRITES TO CASE)</div>
+    <label>Could you reach My Account / sign-in?</label>
+    <select id="access">
+      <option value="">— select —</option>
+      <option value="yes">Yes, signed in</option>
+      <option value="partial">Partial / stuck on recovery</option>
+      <option value="no">No access yet</option>
+    </select>
+    <label>For recovery years 2019–2021, what did you see?</label>
+    <select id="yearsStatus">
+      <option value="">— select —</option>
+      <option value="all_visible">Returns or slips visible for those years</option>
+      <option value="some_missing">Some years missing or unclear</option>
+      <option value="none_visible">Nothing visible for those years</option>
+      <option value="could_not_check">Could not check yet</option>
+    </select>
+    <label>Notes for OnTrac (no SIN)</label>
+    <textarea id="notes" rows="3" placeholder="e.g. locked out, waiting for security code, saw 2020 only…"></textarea>
+    <button class="go" type="button" onclick="saveOutcomes()">Save outcomes to case</button>
+    <button class="sec" type="button" onclick="mark(3)">Mark done</button>
   </div>
+
   <div class="step" id="s4">
-    <div class="n">STEP 4</div>
-    <p>Return to the case. OnTrac continues the loop.</p>
-    <button class="go" type="button" onclick="location.href="index.html"">Back to case</button>
+    <div class="n">STEP 4 · NEXT</div>
+    <p>Return to the case. OnTrac continues from your recorded outcomes.</p>
+    <button class="go" type="button" id="btnBack">Back to case</button>
   </div>
+
   <script>
+    function qs(n) {
+      var m = location.search.match(new RegExp("[?&]" + n + "=([^&]+)"));
+      return m ? decodeURIComponent(m[1]) : "";
+    }
+    var caseId = qs("id") || "";
+    try {
+      if (!caseId) {
+        var raw = localStorage.getItem("ontrac_case_v3");
+        // prefer last case from native list
+      }
+    } catch (e) {}
+
     function openLink(u) {
-      try { if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal(u); else window.open(u, '_blank'); } catch (e) { location.href = u; }
+      try {
+        if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal(u);
+        else window.open(u, "_blank");
+      } catch (e) { location.href = u; }
     }
     function mark(n) {
-      document.getElementById('s' + n).classList.add('done');
-      try { localStorage.setItem('ontrac_cra_step_' + n, '1'); } catch (e) {}
+      document.getElementById("s" + n).classList.add("done");
+      try { localStorage.setItem("ontrac_cra_step_" + n, "1"); } catch (e) {}
     }
+    function copyPrompt() {
+      var t = document.getElementById("safePrompt").textContent;
+      try {
+        if (navigator.clipboard) navigator.clipboard.writeText(t);
+        if (window.OnTracNative) OnTracNative.toast("Prompt copied — paste in CRA chatbot only");
+      } catch (e) {
+        prompt("Copy this prompt", t);
+      }
+    }
+
+    function saveOutcomes() {
+      var access = document.getElementById("access").value;
+      var yearsStatus = document.getElementById("yearsStatus").value;
+      var notes = (document.getElementById("notes").value || "").trim();
+      if (!access || !yearsStatus) {
+        try { if (window.OnTracNative) OnTracNative.toast("Select access + years status"); } catch (e) {}
+        return;
+      }
+      var outcome = {
+        ts: new Date().toISOString(),
+        access: access,
+        yearsStatus: yearsStatus,
+        notes: notes,
+        source: "cra_guide_wd4"
+      };
+      // resolve case id
+      var id = caseId;
+      try {
+        if (!id && window.OnTracNative && OnTracNative.listCases) {
+          var arr = JSON.parse(OnTracNative.listCases() || "[]");
+          if (arr.length) {
+            arr.sort(function (a, b) {
+              return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+            });
+            id = arr[0].caseId;
+          }
+        }
+      } catch (e) {}
+      if (!id) {
+        try { id = localStorage.getItem("ontrac_last_case_id") || ""; } catch (e) {}
+      }
+      if (!id) {
+        try { if (window.OnTracNative) OnTracNative.toast("Open a case first"); } catch (e) {}
+        return;
+      }
+      try {
+        var raw = window.OnTracNative.loadCase(id);
+        if (!raw) throw new Error("no case");
+        var st = JSON.parse(raw);
+        st.craGuide = outcome;
+        st.consent = st.consent || [];
+        st.consent.unshift({
+          summary: "CRA guide outcomes saved",
+          decision: "approve",
+          id: "c_cra_" + Date.now()
+        });
+        // mark guided task done if present
+        (st.tasks || []).forEach(function (t) {
+          if (t.id === "t4" && t.status !== "done") t.status = "done";
+        });
+        window.OnTracNative.saveCase(id, JSON.stringify(st));
+        try { localStorage.setItem("ontrac_last_case_id", id); } catch (e) {}
+        mark(3);
+        try { if (window.OnTracNative) OnTracNative.toast("Outcomes on case"); } catch (e) {}
+        document.getElementById("btnBack").onclick = function () {
+          location.href = "case.html?id=" + encodeURIComponent(id);
+        };
+      } catch (e) {
+        try { if (window.OnTracNative) OnTracNative.toast("Could not save — open case again"); } catch (err) {}
+      }
+    }
+
+    document.getElementById("btnBack").onclick = function () {
+      if (caseId) location.href = "case.html?id=" + encodeURIComponent(caseId);
+      else location.href = "index.html";
+    };
+
     for (var i = 1; i <= 3; i++) {
-      try { if (localStorage.getItem('ontrac_cra_step_' + i)) document.getElementById('s' + i).classList.add('done'); } catch (e) {}
+      try { if (localStorage.getItem("ontrac_cra_step_" + i)) document.getElementById("s" + i).classList.add("done"); } catch (e) {}
     }
   </script>
 </body>
