@@ -44,7 +44,7 @@
     <p class="say" id="close"></p>
   </div>
 
-  <button type="button" id="dial">Open dialer</button>
+  <button type="button" id="dial">Dial CRA individual line</button>
 
   <div class="box">
     <div class="tag">OUTCOME → CASE</div>
@@ -108,12 +108,41 @@
   document.getElementById("never").innerHTML = script.never.map(function (g) { return "<li>" + g + "</li>"; }).join("");
   document.getElementById("close").textContent = script.close;
 
+  // Public CRA individual lines (Canada) — OnTrac holds the numbers so the user is not hunting
+  var CRA_LINES = [
+    { label: "CRA individual tax enquiries", num: "18009598281" },
+    { label: "CRA benefits", num: "18003871199" },
+    { label: "CRA TTY", num: "18006650358" }
+  ];
   document.getElementById("dial").onclick = function () {
+    var n = CRA_LINES[0].num;
     try {
-      if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal("tel:");
-      else location.href = "tel:";
+      if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal("tel:" + n);
+      else location.href = "tel:" + n;
     } catch (e) {}
   };
+  // inject line buttons once
+  if (!document.getElementById("linePack")) {
+    var pack = document.createElement("div");
+    pack.id = "linePack";
+    pack.className = "box";
+    pack.innerHTML = '<div class="tag">NUMBERS ONTRAC HOLDS</div>' +
+      CRA_LINES.map(function (l) {
+        return '<button type="button" class="sec" style="margin-top:6px" data-num="' + l.num + '">' + l.label + ' · ' + l.num + '</button>';
+      }).join("") +
+      '<p class="muted" style="margin-top:8px">Hours and menus change. OnTrac opens the dialer with the number filled — you still control the call.</p>';
+    var dialBtn = document.getElementById("dial");
+    dialBtn.parentNode.insertBefore(pack, dialBtn.nextSibling);
+    pack.querySelectorAll("button[data-num]").forEach(function (b) {
+      b.onclick = function () {
+        var num = b.getAttribute("data-num");
+        try {
+          if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal("tel:" + num);
+          else location.href = "tel:" + num;
+        } catch (e) {}
+      };
+    });
+  }
 
   document.getElementById("back").onclick = function () {
     if (caseId) location.href = "case.html?id=" + encodeURIComponent(caseId);
