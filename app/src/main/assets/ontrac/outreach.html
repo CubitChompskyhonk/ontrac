@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>OnTrac · Outreach</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #080b0f; color: #eef3f8; margin: 0; padding: 16px 16px 48px; line-height: 1.45; }
+    .brand { font-size: 0.62rem; letter-spacing: 0.16em; color: #e8a045; font-weight: 800; }
+    h1 { font-size: 1.25rem; margin: 8px 0; }
+    .muted { color: #8b97a8; font-size: 0.88rem; }
+    .card { background: #121820; border: 1px solid #2a3340; border-radius: 12px; padding: 14px; margin: 10px 0; }
+    label { display: block; font-size: 0.78rem; color: #a8b4c0; margin: 10px 0 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+    input, select, textarea {
+      width: 100%; background: #0a0d12; border: 1px solid #2a3340; color: #eef3f8;
+      border-radius: 8px; padding: 12px; font-size: 0.95rem; box-sizing: border-box;
+    }
+    .letter {
+      font-family: ui-monospace, monospace; font-size: 0.8rem; white-space: pre-wrap;
+      background: #0c1016; border: 1px solid #2a3340; border-radius: 8px; padding: 12px; color: #c5d0dc;
+    }
+    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; }
+    .go { background: #e8a045; color: #0a0d12; }
+    .sec { background: transparent; color: #c5d0dc; border: 1px solid #2a3340; }
+    .tag { display: inline-block; font-size: 0.65rem; background: #e8a045; color: #0a0d12; padding: 3px 8px; border-radius: 4px; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <div class="brand">ONTRAC · OUTREACH · WD6</div>
+  <h1>You name the target.<br/>We write the machine.</h1>
+  <p class="muted">One field from you — recipient. Letter, subject, and send path are OnTrac’s job after Approve.</p>
+
+  <div class="card">
+    <span class="tag">RECIPIENT</span>
+    <label>Who receives this</label>
+    <input type="text" id="to" placeholder="employer@example.com or payroll desk" autocomplete="email" />
+    <label>Kind</label>
+    <select id="kind">
+      <option value="employer">Employer / payroll — request slips</option>
+      <option value="cra_general">CRA-related written follow-up (general)</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <span class="tag">ONTRAC DRAFT</span>
+    <div class="letter" id="preview">Fill recipient to generate…</div>
+    <button type="button" class="sec" id="regen">Regenerate letter</button>
+  </div>
+
+  <div class="card">
+    <button type="button" class="go" id="send">Approve — open send</button>
+    <button type="button" class="sec" id="back">Back to case</button>
+  </div>
+
+  <script>
+(function () {
+  function qs(n) {
+    var m = location.search.match(new RegExp("[?&]" + n + "=([^&]+)"));
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  var caseId = qs("id") || "";
+  try { if (!caseId) caseId = localStorage.getItem("ontrac_last_case_id") || ""; } catch (e) {}
+
+  var years = "2019, 2020, 2021";
+  var st = null;
+  try {
+    if (caseId && window.OnTracNative && OnTracNative.loadCase) {
+      st = JSON.parse(OnTracNative.loadCase(caseId) || "null");
+      if (st && st.years) years = st.years.join(", ");
+      if (st && st.outreach && st.outreach.to) document.getElementById("to").value = st.outreach.to;
+    }
+  } catch (e) {}
+
+  function build() {
+    var to = (document.getElementById("to").value || "").trim();
+    var kind = document.getElementById("kind").value;
+    var subject = kind === "employer"
+      ? "Request for T4 / income slips — " + years
+      : "Written follow-up — tax years " + years;
+    var body;
+    if (kind === "employer") {
+      body =
+"To: " + (to || "[recipient]") + "\n\n" +
+"Subject: " + subject + "\n\n" +
+"To Payroll / HR:\n\n" +
+"We write on behalf of our client, who has authorized this request.\n" +
+"Please provide copies of any T4 or equivalent income slips issued for the tax years " + years +
+", or confirm in writing if no slips were issued for a given year.\n\n" +
+"Case reference: " + (caseId || "pending") + "\n\n" +
+"Thank you for your assistance.\n" +
+"— OnTrac Caseworker (client-authorized under consent)";
+    } else {
+      body =
+"To: " + (to || "[recipient]") + "\n\n" +
+"Subject: " + subject + "\n\n" +
+"This is a written follow-up regarding information needed for tax years " + years + ".\n" +
+"The account holder has authorized OnTrac to assist and to keep a record of this outreach on their case.\n\n" +
+"Case reference: " + (caseId || "pending") + "\n\n" +
+"— OnTrac Caseworker (client-authorized under consent)";
+    }
+    return { to: to, subject: subject, body: body };
+  }
+
+  function preview() {
+    document.getElementById("preview").textContent = build().body;
+  }
+  document.getElementById("to").oninput = preview;
+  document.getElementById("kind").onchange = preview;
+  document.getElementById("regen").onclick = preview;
+  preview();
+
+  document.getElementById("back").onclick = function () {
+    if (caseId) location.href = "case.html?id=" + encodeURIComponent(caseId);
+    else location.href = "index.html";
+  };
+
+  document.getElementById("send").onclick = function () {
+    var letter = build();
+    if (!letter.to) {
+      try { if (window.OnTracNative) OnTracNative.toast("Name the recipient once"); } catch (e) {}
+      return;
+    }
+    if (!caseId) {
+      try { if (window.OnTracNative) OnTracNative.toast("Open a case first"); } catch (e) {}
+      return;
+    }
+    try {
+      var raw = OnTracNative.loadCase(caseId);
+      var s = JSON.parse(raw);
+      s.outreach = {
+        ts: new Date().toISOString(),
+        to: letter.to,
+        subject: letter.subject,
+        body: letter.body,
+        status: "shared"
+      };
+      s.consent = s.consent || [];
+      s.consent.unshift({
+        summary: "Outreach to " + letter.to,
+        decision: "approve",
+        id: "c_out_" + Date.now()
+      });
+      (s.tasks || []).forEach(function (t) {
+        if (t.id === "t6" && t.status !== "done") t.status = "done";
+      });
+      OnTracNative.saveCase(caseId, JSON.stringify(s));
+      if (OnTracNative.shareOutreach) OnTracNative.shareOutreach(letter.subject, letter.body);
+      try { OnTracNative.toast("Letter ready — choose how to send"); } catch (e) {}
+      setTimeout(function () {
+        location.href = "case.html?id=" + encodeURIComponent(caseId);
+      }, 600);
+    } catch (e) {
+      try { if (window.OnTracNative) OnTracNative.toast("Save failed"); } catch (err) {}
+    }
+  };
+})();
+  </script>
+</body>
+</html>
