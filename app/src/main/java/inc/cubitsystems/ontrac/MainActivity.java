@@ -184,6 +184,42 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception ignored) {}
         }
 
+
+        @JavascriptInterface
+        public String listVault(String caseId) {
+            try {
+                File dir = vaultDir(caseId);
+                File[] files = dir.listFiles();
+                if (files == null || files.length == 0) return "[]";
+                StringBuilder sb = new StringBuilder("[");
+                boolean first = true;
+                for (File f : files) {
+                    if (!f.isFile()) continue;
+                    if (!first) sb.append(",");
+                    first = false;
+                    sb.append("{"name":"").append(f.getName().replace(""", ""))
+                      .append("","path":"").append(f.getAbsolutePath().replace("\\", "/").replace(""", ""))
+                      .append("","size":").append(f.length())
+                      .append(","modified":").append(f.lastModified()).append("}");
+                }
+                sb.append("]");
+                return sb.toString();
+            } catch (Exception e) {
+                return "[]";
+            }
+        }
+
+        @JavascriptInterface
+        public boolean deleteVaultFile(String caseId, String name) {
+            try {
+                if (name == null || name.contains("..") || name.contains("/")) return false;
+                File f = new File(vaultDir(caseId), name);
+                return f.isFile() && f.delete();
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         @JavascriptInterface
         public void requestDocumentCapture(String caseId, String consentId) {
             pendingCaseId = caseId != null ? caseId : "";
