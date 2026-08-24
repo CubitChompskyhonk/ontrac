@@ -12,8 +12,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -24,42 +22,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * OnTrac — one Approve; system moves.
- * Capture and voice hooks are real device actions gated by UI consent.
- */
 public class MainActivity extends AppCompatActivity {
+    private static final int REQ_PICK = 1001;
+    private static final int REQ_CAMERA = 1002;
     private WebView webView;
-    private String pendingConsentId = "";
     private String pendingCaseId = "";
     private Uri cameraUri;
     private File cameraFile;
-
-    private final ActivityResultLauncher<Intent> pickImage =
-        registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getResultCode() != RESULT_OK || result.getData() == null) {
-                eval("window.onTracCaptureResult && window.onTracCaptureResult(false, 'cancelled')");
-                return;
-            }
-            Uri uri = result.getData().getData();
-            String path = saveToCaseVault(uri);
-            if (path != null) {
-                eval("window.onTracCaptureResult && window.onTracCaptureResult(true, '" + escape(path) + "')");
-                toast("Document saved to case vault");
-            } else {
-                eval("window.onTracCaptureResult && window.onTracCaptureResult(false, 'save_failed')");
-            }
-        });
-
-    private final ActivityResultLauncher<Uri> takePicture =
-        registerForActivityResult(new ActivityResultContracts.TakePicture(), ok -> {
-            if (!ok || cameraFile == null || !cameraFile.exists()) {
-                eval("window.onTracCaptureResult && window.onTracCaptureResult(false, 'camera_cancelled')");
-                return;
-            }
-            eval("window.onTracCaptureResult && window.onTracCaptureResult(true, '" + escape(cameraFile.getAbsolutePath()) + "')");
-            toast("Photo saved to case vault");
-        });
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -83,14 +52,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void eval(String js) {
         runOnUiThread(() -> webView.evaluateJavascript(js, null));
-    }
-
-    private void toast(String msg) {
-        runOnUiThread(() -> Toast.makeText(this, msg, Toast.LENGTH_SHORT).show());
-    }
-
-    private String escape(String s) {
-        return s.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     private File vaultDir() {
@@ -117,50 +78,65 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private String esc(String s) {
+        return s.replace("\\", "\\\\").replace("'", "\\'");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK) {
+            eval("window.onTracCaptureResult && window.onTracCaptureResult(false, 'cancelled')");
+            return;
+        }
+        if (requestCode == REQ_CAMERA && cameraFile != null && cameraFile.exists()) {
+            eval("window.onTracCaptureResult && window.onTracCaptureResult(true, '" + esc(cameraFile.getAbsolutePath()) + "')");
+            Toast.makeText(this, "Photo saved to case vault", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (requestCode == REQ_PICK && data != null && data.getData() != null) {
+            String path = saveToCaseVault(data.getData());
+            if (path != null) {
+                eval("window.onTracCaptureResult && window.onTracCaptureResult(true, '" + esc(path) + "')");
+                Toast.makeText(this, "Document saved to case vault", Toast.LENGTH_SHORT).show();
+            } else {
+                eval("window.onTracCaptureResult && window.onTracCaptureResult(false, 'save_failed')");
+            }
+        }
+    }
+
     public class Bridge {
         @JavascriptInterface
         public void toast(String msg) {
-            toastMsg(msg);
-        }
-
-        private void toastMsg(String msg) {
             runOnUiThread(() -> Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show());
         }
 
         @JavascriptInterface
         public void requestDocumentCapture(String caseId, String consentId) {
             pendingCaseId = caseId != null ? caseId : "";
-            pendingConsentId = consentId != null ? consentId : "";
             runOnUiThread(() -> {
                 Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
                 pick.setType("image/*");
                 pick.addCategory(Intent.CATEGORY_OPENABLE);
-                Intent cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 try {
                     cameraFile = new File(vaultDir(), "cap_" + System.currentTimeMillis() + ".jpg");
                     cameraUri = FileProvider.getUriForFile(
-                        MainActivity.this,
-                        "inc.cubitsystems.ontrac.fileprovider",
-                        cameraFile);
+                        MainActivity.this, "inc.cubitsystems.ontrac.fileprovider", cameraFile);
+                    Intent cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     cam.putExtra(MediaStore.EXTRA_OUTPUT, cameraUri);
                     cam.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                } catch (Exception e) {
-                    cameraUri = null;
-                }
-                Intent chooser = Intent.createChooser(pick, "Add document to case");
-                if (cameraUri != null) {
+                    Intent chooser = Intent.createChooser(pick, "Add document to case");
                     chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cam});
+                    startActivityForResult(chooser, REQ_PICK);
+                } catch (Exception e) {
+                    startActivityForResult(Intent.createChooser(pick, "Add document to case"), REQ_PICK);
                 }
-                pickImage.launch(chooser);
             });
         }
 
         @JavascriptInterface
         public void queueVoiceRepresentation(String caseId, String consentId, String scope) {
-            runOnUiThread(() ->
-                Toast.makeText(MainActivity.this,
-                    "Voice script armed · consent " + (consentId != null ? consentId : ""),
-                    Toast.LENGTH_LONG).show());
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Voice script armed", Toast.LENGTH_LONG).show());
         }
 
         @JavascriptInterface
