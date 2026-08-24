@@ -1,0 +1,137 @@
+{
+  "contract_issues": [],
+  "customers": [
+    {
+      "persona": {
+        "id": "c1",
+        "name": "Maya, 34",
+        "years": [
+          2019,
+          2020,
+          2021
+        ],
+        "hates_filing": true,
+        "cannot_write_email": true,
+        "worries_benefits": true,
+        "access": "partial",
+        "years_status": "some_missing",
+        "notes": "stuck on security code",
+        "recipient": "payroll@oldjob.example",
+        "does_call": false,
+        "profile": "Avoids phone; lost T4s; on benefits"
+      },
+      "steps": [
+        "Completed onboarding gates",
+        "Signed compliance / awareness",
+        "Opened case for years [2019, 2020, 2021]",
+        "Approved document capture into vault",
+        "Stable multi-capture (3 files)",
+        "CRA guide outcomes saved to case (not left in head)",
+        "Named recipient once; OnTrac wrote letter and opened send",
+        "Skipped call (product allows pause \u2014 not forced homework)",
+        "Consent log has 4 receipts"
+      ],
+      "bugs": [],
+      "delight": [
+        "Awareness about refunds affecting benefits felt respectful, not scary",
+        "Case still there after closing the app",
+        "Didn't have to rename or organize the photo",
+        "Did not have to write the email from scratch",
+        "Never told to just go figure out CRA alone"
+      ],
+      "pass": true,
+      "would_stop": false,
+      "final_stage": "gather",
+      "consent_count": 4
+    },
+    {
+      "persona": {
+        "id": "c2",
+        "name": "Derek, 51",
+        "years": [
+          2018,
+          2019
+        ],
+        "hates_filing": true,
+        "cannot_write_email": false,
+        "worries_benefits": false,
+        "access": "no",
+        "years_status": "could_not_check",
+        "notes": "locked out years",
+        "recipient": "hr@warehouse.example",
+        "does_call": true,
+        "ref": "CRA-REF-8891",
+        "profile": "Will try one call if scripted; freezes on portals"
+      },
+      "steps": [
+        "Completed onboarding gates",
+        "Signed compliance / awareness",
+        "Opened case for years [2018, 2019]",
+        "Approved document capture into vault",
+        "Stable multi-capture (3 files)",
+        "CRA guide outcomes saved to case (not left in head)",
+        "Named recipient once; OnTrac wrote letter and opened send",
+        "Call outcome + ref on case \u2192 Track",
+        "Consent log has 5 receipts"
+      ],
+      "bugs": [],
+      "delight": [
+        "Case still there after closing the app",
+        "Didn't have to rename or organize the photo",
+        "Never told to just go figure out CRA alone"
+      ],
+      "pass": true,
+      "would_stop": false,
+      "final_stage": "track",
+      "consent_count": 5
+    },
+    {
+      "persona": {
+        "id": "c3",
+        "name": "Sam, 27",
+        "years": [
+          2020,
+          2021,
+          2022
+        ],
+        "hates_filing": true,
+        "cannot_write_email": true,
+        "worries_benefits": true,
+        "access": "yes",
+        "years_status": "none_visible",
+        "notes": "signed in, no slips showing",
+        "recipient": "pay@gigco.example",
+        "does_call": false,
+        "profile": "Gig worker; anxiety on hold music; needs one button"
+      },
+      "steps": [
+        "Completed onboarding gates",
+        "Signed compliance / awareness",
+        "Opened case for years [2020, 2021, 2022]",
+        "Approved document capture into vault",
+        "Stable multi-capture (3 files)",
+        "CRA guide outcomes saved to case (not left in head)",
+        "Named recipient once; OnTrac wrote letter and opened send",
+        "Skipped call (product allows pause \u2014 not forced homework)",
+        "Consent log has 4 receipts"
+      ],
+      "bugs": [],
+      "delight": [
+        "Awareness about refunds affecting benefits felt respectful, not scary",
+        "Case still there after closing the app",
+        "Didn't have to rename or organize the photo",
+        "Did not have to write the email from scratch",
+        "Never told to just go figure out CRA alone"
+      ],
+      "pass": true,
+      "would_stop": false,
+      "final_stage": "gather",
+      "consent_count": 4
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "would_stop": 0
+  }
+}
