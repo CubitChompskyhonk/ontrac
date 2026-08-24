@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>OnTrac · CRA guide</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0a0d12; color: #eef3f8; margin: 0; padding: 16px; line-height: 1.45; }
+    h1 { font-size: 1.2rem; }
+    .muted { color: #8b97a8; font-size: 0.88rem; }
+    .step { background: #141a22; border: 1px solid #283140; border-radius: 12px; padding: 14px; margin: 10px 0; }
+    .step.done { border-color: #2a5a40; }
+    .n { color: #5b9fd4; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.1em; }
+    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; }
+    .go { background: #4f9ad8; color: #061018; }
+    .sec { background: transparent; color: #c5d0dc; border: 1px solid #283140; }
+    a { color: #6aade0; }
+  </style>
+</head>
+<body>
+  <div class="muted">ONTRAC HOLDS THIS SESSION</div>
+  <h1>CRA access recovery</h1>
+  <p class="muted">You do not wander the portal alone. Complete the checkpoint OnTrac highlights. Passwords stay yours — never stored here.</p>
+
+  <div class="step" id="s1">
+    <div class="n">STEP 1</div>
+    <p>Open CRA sign-in options (My Account).</p>
+    <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services.html')">Open CRA login help</button>
+    <button class="sec" type="button" onclick="mark(1)">Mark done</button>
+  </div>
+  <div class="step" id="s2">
+    <div class="n">STEP 2</div>
+    <p>If locked out: recover CRA user ID / password with their official recovery — OnTrac stays on this screen as your checklist.</p>
+    <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services/help-cra-sign-in-services.html')">Open recovery help</button>
+    <button class="sec" type="button" onclick="mark(2)">Mark done</button>
+  </div>
+  <div class="step" id="s3">
+    <div class="n">STEP 3</div>
+    <p>When signed in, note whether returns appear for 2019–2021. OnTrac will record what you report next — you are not asked to email yourself a summary.</p>
+    <button class="sec" type="button" onclick="mark(3)">I checked the years</button>
+  </div>
+  <div class="step" id="s4">
+    <div class="n">STEP 4</div>
+    <p>Return to the case. OnTrac continues the loop.</p>
+    <button class="go" type="button" onclick="location.href='index.html'">Back to case</button>
+  </div>
+  <script>
+    function openLink(u) {
+      try { if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal(u); else window.open(u, '_blank'); } catch (e) { location.href = u; }
+    }
+    function mark(n) {
+      document.getElementById('s' + n).classList.add('done');
+      try { localStorage.setItem('ontrac_cra_step_' + n, '1'); } catch (e) {}
+    }
+    for (var i = 1; i <= 3; i++) {
+      try { if (localStorage.getItem('ontrac_cra_step_' + i)) document.getElementById('s' + i).classList.add('done'); } catch (e) {}
+    }
+  </script>
+</body>
+</html>
