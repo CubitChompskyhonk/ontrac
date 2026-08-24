@@ -66,6 +66,7 @@
     <button type="button" class="secondary" id="btnExport">Export all consent logs</button>
     <button type="button" class="secondary" id="btnRules">Review rules again</button>
     <button type="button" class="secondary" id="btnCompliance">Compliance & awareness</button>
+    <button type="button" class="secondary" id="btnInstall">Pilot install sheet</button>
   </div>
 
   <p class="foot">Cubit · Durable cases · Representation through consent</p>
@@ -165,6 +166,9 @@
   };
   document.getElementById("btnCompliance").onclick = function () {
     location.href = "compliance.html";
+  };
+  document.getElementById("btnInstall").onclick = function () {
+    location.href = "install.html";
   };
 
   render();
