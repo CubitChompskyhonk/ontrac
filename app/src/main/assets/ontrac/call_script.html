@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>OnTrac · Live script</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0a0d12; color: #eef3f8; margin: 0; padding: 16px 16px 48px; }
+    .brand { font-size: 0.65rem; letter-spacing: 0.15em; color: #5b9fd4; font-weight: 800; }
+    h1 { font-size: 1.25rem; margin: 8px 0; }
+    .box { background: #141a22; border: 1px solid #283140; border-radius: 12px; padding: 14px; margin: 10px 0; }
+    .say { font-size: 1.05rem; line-height: 1.5; }
+    .muted { color: #8b97a8; font-size: 0.85rem; }
+    .never { color: #e08090; font-size: 0.85rem; }
+    button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; margin-top: 8px; background: #4f9ad8; color: #061018; }
+    .sec { background: transparent; color: #c5d0dc; border: 1px solid #283140; }
+  </style>
+</head>
+<body>
+  <div class="brand">LIVE SCRIPT · ASSISTED</div>
+  <h1>CRA / employer call</h1>
+  <p class="muted">OnTrac speaks the structure. You stay in control. Authorization must already be on the case.</p>
+
+  <div class="box">
+    <div class="muted">OPEN WITH</div>
+    <p class="say" id="opening">Loading…</p>
+  </div>
+  <div class="box">
+    <div class="muted">GET</div>
+    <ul id="goals" class="say"></ul>
+  </div>
+  <div class="box">
+    <div class="muted">NEVER</div>
+    <ul id="never" class="never"></ul>
+  </div>
+  <div class="box">
+    <div class="muted">CLOSE</div>
+    <p class="say" id="close"></p>
+  </div>
+
+  <button type="button" id="dial">Open phone dialer</button>
+  <button type="button" class="sec" onclick="location.href='index.html'">Back to case — log outcome next</button>
+
+  <script>
+    var years = "2019, 2020, 2021";
+    try {
+      var raw = localStorage.getItem("ontrac_case_v3");
+      if (raw) { var st = JSON.parse(raw); if (st.years) years = st.years.join(", "); }
+    } catch (e) {}
+    var script = {
+      opening: "Hello, I am calling with authorization to help obtain account information for tax years " + years + ". The client has approved this contact.",
+      goals: ["Confirm filing status for each recovery year", "Ask how to obtain missing slips or transcripts", "Write down any reference number"],
+      never: ["Claim to be the taxpayer", "Change address or direct deposit without Level 2+ and explicit consent", "Share unrelated personal data"],
+      close: "Thank you. Please note the reference number. We will follow up if documents do not arrive."
+    };
+    try {
+      if (window.OnTracNative && OnTracNative.loadScript) {
+        var j = OnTracNative.loadScript("cra_assisted.json");
+        if (j) {
+          var p = JSON.parse(j);
+          if (p.opening) script.opening = p.opening.replace("[YEARS]", years);
+          if (p.goals) script.goals = p.goals;
+          if (p.never) script.never = p.never;
+          if (p.close) script.close = p.close;
+        }
+      }
+    } catch (e) {}
+    document.getElementById("opening").textContent = script.opening;
+    document.getElementById("goals").innerHTML = script.goals.map(function (g) { return "<li>" + g + "</li>"; }).join("");
+    document.getElementById("never").innerHTML = script.never.map(function (g) { return "<li>" + g + "</li>"; }).join("");
+    document.getElementById("close").textContent = script.close;
+    document.getElementById("dial").onclick = function () {
+      // CRA individual enquiries — user still may need provincial numbers; dialer opens blank for assisted entry
+      try {
+        if (window.OnTracNative && OnTracNative.openExternal) OnTracNative.openExternal("tel:");
+        else location.href = "tel:";
+      } catch (e) {}
+    };
+  </script>
+</body>
+</html>
