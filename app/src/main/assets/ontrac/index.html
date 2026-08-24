@@ -65,6 +65,7 @@
     <button type="button" class="primary" id="btnNew">Start tax recovery case</button>
     <button type="button" class="secondary" id="btnExport">Export all consent logs</button>
     <button type="button" class="secondary" id="btnRules">Review rules again</button>
+    <button type="button" class="secondary" id="btnCompliance">Compliance & awareness</button>
   </div>
 
   <p class="foot">Cubit · Durable cases · Representation through consent</p>
@@ -77,6 +78,10 @@
     try {
       if (!localStorage.getItem("ontrac_onboarding_v1")) {
         location.replace("onboarding.html");
+        return;
+      }
+      if (!localStorage.getItem("ontrac_compliance_v1")) {
+        location.replace("compliance.html");
         return;
       }
     } catch (e) {
@@ -157,6 +162,9 @@
   };
   document.getElementById("btnRules").onclick = function () {
     location.href = "onboarding.html";
+  };
+  document.getElementById("btnCompliance").onclick = function () {
+    location.href = "compliance.html";
   };
 
   render();
