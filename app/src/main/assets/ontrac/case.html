@@ -72,6 +72,7 @@
     <div class="label">Stage</div>
     <div class="stage" id="stage">—</div>
     <div class="vault" id="vaultInfo">Case vault: empty</div>
+    <button type="button" class="secondary" id="btnVault" style="margin-top:10px">Open case vault</button>
   </div>
 
   <div class="card">
@@ -265,8 +266,14 @@
     state.stage = stageFromProgress();
     document.getElementById("heading").textContent = (state.title || "Tax recovery") + " · " + (state.years || []).join("–");
     document.getElementById("stage").textContent = state.stage;
-    document.getElementById("vaultInfo").textContent =
-      "Case vault: " + ((state.vault && state.vault.length) ? state.vault.length + " file(s)" : "empty");
+    var vaultCount = (state.vault && state.vault.length) ? state.vault.length : 0;
+    try {
+      if (window.OnTracNative && OnTracNative.listVault) {
+        var vf = JSON.parse(OnTracNative.listVault(state.caseId) || "[]");
+        if (vf.length) vaultCount = vf.length;
+      }
+    } catch (e) {}
+    document.getElementById("vaultInfo").textContent = "Case vault: " + (vaultCount ? vaultCount + " file(s)" : "empty");
     var t = current();
     ["execLog", "letterBox", "scriptBox"].forEach(function (id) {
       document.getElementById(id).classList.remove("show");
@@ -320,6 +327,9 @@
     render();
   }
 
+  document.getElementById("btnVault").onclick = function () {
+    location.href = "vault.html?id=" + encodeURIComponent(state.caseId);
+  };
   document.getElementById("btnApprove").onclick = approve;
   document.getElementById("btnExportCase").onclick = function () {
     var payload = {
