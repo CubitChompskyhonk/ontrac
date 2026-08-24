@@ -6,100 +6,74 @@
   <title>OnTrac</title>
   <style>
     :root {
-      --bg: #0a0d12; --card: #141a22; --line: #283140; --text: #f0f4f8;
-      --mute: #8b97a8; --ok: #3dd68c; --accent: #5b9fd4; --fire: #e8a045;
+      --bg: #07090c; --card: #121820; --line: #2a3340; --text: #f2f5f8;
+      --mute: #8b97a8; --accent: #e8a045; --ok: #3dd68c;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: var(--bg); color: var(--text);
-      min-height: 100dvh; padding: 16px 14px 40px; line-height: 1.45;
+      min-height: 100dvh; padding: 20px 16px 40px; line-height: 1.45;
     }
-    .brand { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--accent); font-weight: 800; }
-    h1 { font-size: 1.35rem; margin: 8px 0 4px; font-weight: 700; }
-    .tagline { color: var(--mute); font-size: 0.88rem; margin-bottom: 14px; }
+    .brand { font-size: 0.62rem; letter-spacing: 0.18em; color: var(--accent); font-weight: 800; }
+    h1 { font-size: 1.55rem; font-weight: 750; margin: 12px 0 8px; letter-spacing: -0.03em; }
+    .sub { color: var(--mute); font-size: 0.95rem; margin-bottom: 20px; }
     .card {
       background: var(--card); border: 1px solid var(--line);
-      border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+      border-radius: 16px; padding: 18px 16px; margin-bottom: 12px;
     }
     .label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
-    button {
-      border: none; border-radius: 12px; padding: 14px 16px;
-      font-weight: 800; font-size: 0.95rem; width: 100%;
+    .next { font-size: 1.2rem; font-weight: 700; margin: 10px 0 8px; }
+    .scope { color: var(--mute); font-size: 0.9rem; margin-bottom: 16px; }
+    button.approve {
+      width: 100%; border: none; border-radius: 14px; padding: 18px;
+      font-weight: 800; font-size: 1.05rem;
+      background: linear-gradient(180deg, #f0b45a, #d4892a); color: #120c04;
     }
-    .primary {
-      background: linear-gradient(180deg, #6aade0, #3d7eb0);
-      color: #061018; margin-top: 8px;
+    button.approve:disabled { opacity: 0.4; }
+    button.ghost {
+      width: 100%; margin-top: 10px; padding: 12px; border-radius: 12px;
+      background: transparent; border: 1px solid var(--line); color: var(--mute); font-weight: 600;
     }
-    .secondary {
-      background: transparent; color: var(--text); border: 1px solid var(--line);
-      font-weight: 600; margin-top: 8px;
+    .pilot {
+      font-size: 0.75rem; color: var(--mute); text-align: center; margin-top: 18px;
     }
-    .case-row {
-      padding: 12px 0; border-bottom: 1px solid var(--line);
-      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    .exec {
+      display: none; margin-top: 12px; padding: 12px; border-radius: 10px;
+      background: #0c1812; border: 1px solid #1e3d2e; color: var(--ok); font-size: 0.88rem;
+      white-space: pre-wrap;
     }
-    .case-row:last-child { border-bottom: none; }
-    .case-title { font-weight: 650; font-size: 0.95rem; }
-    .case-meta { color: var(--mute); font-size: 0.78rem; margin-top: 2px; }
-    .empty { color: var(--mute); font-size: 0.9rem; padding: 8px 0; }
-    .poem {
-      font-size: 0.8rem; color: var(--mute); font-style: italic;
-      border-left: 3px solid var(--fire); padding: 8px 0 8px 12px; margin: 8px 0 16px;
-    }
-    .foot { margin-top: 16px; font-size: 0.72rem; color: #5a6575; text-align: center; }
+    .exec.show { display: block; }
+    .pulse { animation: p 1.2s ease infinite; }
+    @keyframes p { 50% { opacity: 0.65; } }
   </style>
 </head>
 <body>
-  <div class="brand">ONTRAC · USER POWER</div>
-  <h1>Your cases</h1>
-  <p class="tagline">On this device. Under your authority. One Approve moves their machine.</p>
-  <div class="poem">
-    Their system counts on you giving up.<br/>
-    This is the tool that does not.
-  </div>
-
-  <div class="card">
-    <div class="label">Open or resume</div>
-    <div id="list"></div>
-    <button type="button" class="primary" id="btnNew">Start tax recovery case</button>
-    <button type="button" class="secondary" id="btnExport">Export all consent logs</button>
-    <button type="button" class="secondary" id="btnRules">Review rules again</button>
-    <button type="button" class="secondary" id="btnCompliance">Compliance & awareness</button>
-    <button type="button" class="secondary" id="btnInstall">Pilot install sheet</button>
-  </div>
-
-  <p class="foot">Cubit · Durable cases · Representation through consent</p>
+  <div class="brand">ONTRAC · PILOT</div>
+  <div id="root"></div>
+  <p class="pilot">Pilot build · Consent before every move · Not legal or tax advice</p>
 
   <script>
 (function () {
-
-  // WD2 first-run gate
-  (function () {
-    try {
-      if (!localStorage.getItem("ontrac_onboarding_v1")) {
-        location.replace("onboarding.html");
-        return;
-      }
-      if (!localStorage.getItem("ontrac_compliance_v1")) {
-        location.replace("compliance.html");
-        return;
-      }
-    } catch (e) {
-      location.replace("onboarding.html");
-      return;
-    }
-  })();
+  function has(key) {
+    try { return !!localStorage.getItem(key); } catch (e) { return false; }
+  }
+  if (!has("ontrac_onboarding_v1")) {
+    location.replace("onboarding.html");
+    return;
+  }
+  if (!has("ontrac_compliance_v1")) {
+    location.replace("compliance.html");
+    return;
+  }
 
   function listCases() {
     try {
       if (window.OnTracNative && OnTracNative.listCases) {
-        var raw = OnTracNative.listCases();
-        var arr = JSON.parse(raw || "[]");
-        return Array.isArray(arr) ? arr : [];
+        var arr = JSON.parse(OnTracNative.listCases() || "[]");
+        return Array.isArray(arr) ? arr.filter(function (c) { return c && c.caseId; }) : [];
       }
     } catch (e) {}
-    // browser fallback
     try {
       var ids = JSON.parse(localStorage.getItem("ontrac_case_index") || "[]");
       return ids.map(function (id) {
@@ -108,70 +82,93 @@
     } catch (e) { return []; }
   }
 
-  function render() {
-    var cases = listCases().filter(function (c) { return c && c.caseId; });
-    cases.sort(function (a, b) {
-      return (b.updatedAt || b.createdAt || "").localeCompare(a.updatedAt || a.createdAt || "");
-    });
-    var el = document.getElementById("list");
-    if (!cases.length) {
-      el.innerHTML = '<p class="empty">No cases yet. Start one — OnTrac carries the work after Approve.</p>';
-      return;
-    }
-    el.innerHTML = cases.map(function (c) {
-      var years = (c.years || []).join("–") || "—";
-      var stage = c.stage || "—";
-      var done = (c.tasks || []).filter(function (t) { return t.status === "done"; }).length;
-      var total = (c.tasks || []).length || 0;
-      return '<div class="case-row">' +
-        '<div><div class="case-title">' + (c.title || "Tax recovery") + '</div>' +
-        '<div class="case-meta">' + years + ' · ' + stage + ' · ' + done + '/' + total + ' steps</div></div>' +
-        '<button type="button" class="secondary" style="width:auto;padding:10px 14px" data-id="' + c.caseId + '">Open</button></div>';
-    }).join("");
-    el.querySelectorAll("button[data-id]").forEach(function (btn) {
-      btn.onclick = function () {
-        location.href = "case.html?id=" + encodeURIComponent(btn.getAttribute("data-id"));
-      };
-    });
+  var cases = listCases();
+  // Prefer most recently updated active case
+  cases.sort(function (a, b) {
+    return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+  });
+  var active = cases[0] || null;
+
+  if (active) {
+    location.replace("case.html?id=" + encodeURIComponent(active.caseId));
+    return;
   }
 
-  document.getElementById("btnNew").onclick = function () {
-    location.href = "case.html?new=1";
-  };
+  // ZERO STATE — one button. Customer zero: locked out + unfiled years.
+  document.getElementById("root").innerHTML =
+    "<h1>Locked out.<br/>Years unfiled.<br/>One button.</h1>" +
+    "<p class=\"sub\">OnTrac carries the recovery. You Approve. That is the whole product.</p>" +
+    "<div class=\"card\">" +
+    "<div class=\"label\">Next — OnTrac will do this</div>" +
+    "<div class=\"next\">Open your tax recovery case</div>" +
+    "<p class=\"scope\">Creates a case for multi-year unfiled returns and CRA lockout. No homework. Progress stays on this phone.</p>" +
+    "<button type=\"button\" class=\"approve pulse\" id=\"go\">Approve — start recovery</button>" +
+    "<div class=\"exec\" id=\"exec\"></div>" +
+    "</div>" +
+    "<button type=\"button\" class=\"ghost\" id=\"more\">Pilot notes</button>";
 
-  document.getElementById("btnExport").onclick = function () {
-    var cases = listCases().filter(function (c) { return c && c.caseId; });
-    var onboarding = null;
-    try { onboarding = JSON.parse(localStorage.getItem("ontrac_onboarding_v1") || "null"); } catch (e) {}
-    var payload = {
-      exportedAt: new Date().toISOString(),
-      onboarding: onboarding,
-      cases: cases.map(function (c) {
-        return { caseId: c.caseId, title: c.title, years: c.years, consent: c.consent || [] };
-      })
-    };
-    var text = JSON.stringify(payload, null, 2);
-    try {
-      if (window.OnTracNative && OnTracNative.shareOutreach) {
-        OnTracNative.shareOutreach("OnTrac consent log export", text);
-      } else {
-        prompt("Copy consent export", text);
-      }
-    } catch (e) {
-      prompt("Copy consent export", text);
-    }
-  };
-  document.getElementById("btnRules").onclick = function () {
-    location.href = "onboarding.html";
-  };
-  document.getElementById("btnCompliance").onclick = function () {
-    location.href = "compliance.html";
-  };
-  document.getElementById("btnInstall").onclick = function () {
+  document.getElementById("more").onclick = function () {
     location.href = "install.html";
   };
 
-  render();
+  document.getElementById("go").onclick = function () {
+    var btn = document.getElementById("go");
+    btn.disabled = true;
+    var id = "case_" + Date.now().toString(36);
+    var state = {
+      caseId: id,
+      title: "Tax recovery",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      stage: "gather",
+      years: [2019, 2020, 2021, 2022, 2023],
+      profile: {
+        lockedOut: true,
+        unfiledMultiYear: true,
+        customerZero: true
+      },
+      repLevel: "none",
+      vault: [],
+      consent: [{
+        id: "c_start",
+        summary: "Start recovery case (locked out + unfiled years)",
+        decision: "approve",
+        ts: new Date().toISOString()
+      }],
+      tasks: [
+        { id: "t1", title: "Open recovery case for lockout + unfiled years", status: "done" },
+        { id: "t2", title: "Map years that need filing", status: "done" },
+        { id: "t3", title: "Capture income documents into case vault", status: "awaiting",
+          scope: "OnTrac opens camera/files and stores images only on this case." },
+        { id: "t4", title: "Run CRA access recovery (locked-out path)", status: "awaiting",
+          scope: "OnTrac holds the lockout checklist and official recovery links. Passwords never stored." },
+        { id: "t5", title: "Prepare representative authorization if needed", status: "awaiting",
+          scope: "Level 1 package so information can be obtained with your Approve." },
+        { id: "t6", title: "Send outreach (OnTrac writes the letter)", status: "awaiting",
+          scope: "You name the recipient once. OnTrac writes and opens send." },
+        { id: "t7", title: "Track until the loop is quiet", status: "awaiting",
+          scope: "Outcomes and reference numbers stay on the case." }
+      ]
+    };
+    var json = JSON.stringify(state);
+    try {
+      if (window.OnTracNative && OnTracNative.saveCase) OnTracNative.saveCase(id, json);
+    } catch (e) {}
+    try {
+      localStorage.setItem("ontrac_case_" + id, json);
+      localStorage.setItem("ontrac_last_case_id", id);
+      var idx = JSON.parse(localStorage.getItem("ontrac_case_index") || "[]");
+      if (idx.indexOf(id) < 0) idx.push(id);
+      localStorage.setItem("ontrac_case_index", JSON.stringify(idx));
+    } catch (e) {}
+    var ex = document.getElementById("exec");
+    ex.textContent = "Case opened on device.\nYears: 2019–2023.\nLockout path armed.\nOpening your next Approve…";
+    ex.classList.add("show");
+    try { if (window.OnTracNative) OnTracNative.toast("Recovery started"); } catch (e) {}
+    setTimeout(function () {
+      location.replace("case.html?id=" + encodeURIComponent(id));
+    }, 700);
+  };
 })();
   </script>
 </body>
