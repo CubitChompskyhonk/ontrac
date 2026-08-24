@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>OnTrac · Before we start</title>
+  <style>
+    :root {
+      --bg: #0a0d12; --card: #141a22; --line: #283140; --text: #f0f4f8;
+      --mute: #8b97a8; --ok: #3dd68c; --accent: #5b9fd4; --fire: #e8a045;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100dvh; padding: 18px 16px 48px; line-height: 1.5;
+    }
+    .brand { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--accent); font-weight: 800; }
+    h1 { font-size: 1.4rem; margin: 10px 0 8px; font-weight: 700; }
+    .lead { color: var(--mute); font-size: 0.92rem; margin-bottom: 16px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    h2 { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    ul { padding-left: 1.1rem; color: #c8d2dc; font-size: 0.9rem; }
+    li { margin: 6px 0; }
+    .never li { color: #e0a0a8; }
+    label.check {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 0.9rem; margin: 10px 0; color: #d0d8e0;
+    }
+    input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; }
+    button {
+      width: 100%; border: none; border-radius: 12px; padding: 16px;
+      font-weight: 800; font-size: 1rem; margin-top: 8px;
+      background: linear-gradient(180deg, #6aade0, #3d7eb0); color: #061018;
+    }
+    button:disabled { opacity: 0.35; }
+    .foot { margin-top: 18px; font-size: 0.75rem; color: #5a6575; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="brand">ONTRAC · FIRST RUN</div>
+  <h1>Before we start</h1>
+  <p class="lead">One button moves the machine — but only with your eyes open. Read once. Approve the rules. Then the casework begins.</p>
+
+  <div class="card">
+    <h2>What OnTrac is</h2>
+    <ul>
+      <li>A personal caseworker that carries administrative steps after you Approve</li>
+      <li>Built for people who find calls, portals, and paperwork to be walls</li>
+      <li>Consent-first: nothing consequential runs without your approval on the record</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>What OnTrac is not</h2>
+    <ul class="never">
+      <li>Not a lawyer, accountant, or licensed tax preparer</li>
+      <li>Not legal, tax, or financial advice</li>
+      <li>Not a guarantee of refunds, benefits, or outcomes</li>
+      <li>Not the Canada Revenue Agency</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>What we never do</h2>
+    <ul class="never">
+      <li>Never store your CRA password</li>
+      <li>Never pretend to be you without authorization you approved</li>
+      <li>Never change direct deposit, address, or marital status without the right authority and a fresh Approve</li>
+      <li>Never sell your case data</li>
+      <li>Never hand the hard step back to you and call it “help”</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Privacy on this device</h2>
+    <ul>
+      <li>Cases and consent logs stay on this phone unless you Approve an export or share</li>
+      <li>Document photos go only into the case vault for that case</li>
+      <li>You can pause a case anytime; progress is not charity and not a trap</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Awareness</h2>
+    <ul>
+      <li>A large tax refund or benefit can affect other supports — OnTrac will surface awareness, not withhold what you are entitled to pursue</li>
+      <li>CRA representative levels (1 vs 2) limit what anyone may do on your behalf</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <label class="check"><input type="checkbox" id="c1" /> I understand OnTrac is not legal, tax, or financial advice and does not guarantee outcomes.</label>
+    <label class="check"><input type="checkbox" id="c2" /> I understand consequential actions require my Approve and are logged.</label>
+    <label class="check"><input type="checkbox" id="c3" /> I understand OnTrac will not store my government passwords.</label>
+    <button type="button" id="btnGo" disabled>I agree — open OnTrac</button>
+  </div>
+
+  <p class="foot">Cubit Systems · Dignity over charity · Agency over paternalism</p>
+
+  <script>
+    function sync() {
+      var ok = document.getElementById("c1").checked &&
+               document.getElementById("c2").checked &&
+               document.getElementById("c3").checked;
+      document.getElementById("btnGo").disabled = !ok;
+    }
+    ["c1","c2","c3"].forEach(function (id) {
+      document.getElementById(id).onchange = sync;
+    });
+    document.getElementById("btnGo").onclick = function () {
+      var receipt = {
+        ts: new Date().toISOString(),
+        version: "wd2-onboarding-v1",
+        items: [
+          "not_legal_tax_financial_advice",
+          "consent_required_for_consequential_acts",
+          "no_government_password_storage"
+        ]
+      };
+      try {
+        localStorage.setItem("ontrac_onboarding_v1", JSON.stringify(receipt));
+        if (window.OnTracNative && OnTracNative.saveCase) {
+          OnTracNative.saveCase("_onboarding", JSON.stringify(receipt));
+        }
+      } catch (e) {}
+      try { if (window.OnTracNative) OnTracNative.toast("Rules on record"); } catch (e) {}
+      location.href = "index.html";
+    };
+  </script>
+</body>
+</html>
