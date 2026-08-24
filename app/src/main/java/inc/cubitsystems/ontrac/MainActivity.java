@@ -16,15 +16,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * OnTrac WD1: durable case files on disk + vault capture.
+ * Cases survive process death (not only localStorage).
+ */
 public class MainActivity extends AppCompatActivity {
     private static final int REQ_PICK = 1001;
-    private static final int REQ_CAMERA = 1002;
     private WebView webView;
     private String pendingCaseId = "";
     private Uri cameraUri;
@@ -54,8 +59,15 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> webView.evaluateJavascript(js, null));
     }
 
-    private File vaultDir() {
-        File dir = new File(getFilesDir(), "case_vault/" + (pendingCaseId.isEmpty() ? "default" : pendingCaseId));
+    private File casesDir() {
+        File dir = new File(getFilesDir(), "cases");
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        return dir;
+    }
+
+    private File vaultDir(String caseId) {
+        File dir = new File(getFilesDir(), "case_vault/" + (caseId == null || caseId.isEmpty() ? "default" : caseId));
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
         return dir;
@@ -64,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private String saveToCaseVault(Uri uri) {
         try {
             String name = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".jpg";
-            File out = new File(vaultDir(), name);
+            File out = new File(vaultDir(pendingCaseId), name);
             try (InputStream in = getContentResolver().openInputStream(uri);
                  FileOutputStream fos = new FileOutputStream(out)) {
                 if (in == null) return null;
@@ -79,7 +91,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String esc(String s) {
-        return s.replace("\\", "\\\\").replace("'", "\\'");
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n").replace("\r", "");
     }
 
     @Override
@@ -87,11 +100,6 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK) {
             eval("window.onTracCaptureResult && window.onTracCaptureResult(false, 'cancelled')");
-            return;
-        }
-        if (requestCode == REQ_CAMERA && cameraFile != null && cameraFile.exists()) {
-            eval("window.onTracCaptureResult && window.onTracCaptureResult(true, '" + esc(cameraFile.getAbsolutePath()) + "')");
-            Toast.makeText(this, "Photo saved to case vault", Toast.LENGTH_SHORT).show();
             return;
         }
         if (requestCode == REQ_PICK && data != null && data.getData() != null) {
@@ -112,6 +120,71 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
+        public void saveCase(String caseId, String json) {
+            try {
+                if (caseId == null || caseId.isEmpty()) return;
+                File f = new File(casesDir(), caseId + ".json");
+                try (FileOutputStream fos = new FileOutputStream(f)) {
+                    fos.write(json.getBytes(StandardCharsets.UTF_8));
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Save failed", Toast.LENGTH_SHORT).show());
+            }
+        }
+
+        @JavascriptInterface
+        public String loadCase(String caseId) {
+            try {
+                File f = new File(casesDir(), caseId + ".json");
+                if (!f.exists()) return "";
+                byte[] data = new byte[(int) f.length()];
+                try (FileInputStream in = new FileInputStream(f)) {
+                    //noinspection ResultOfMethodCallIgnored
+                    in.read(data);
+                }
+                return new String(data, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public String listCases() {
+            try {
+                File[] files = casesDir().listFiles((dir, name) -> name.endsWith(".json"));
+                if (files == null || files.length == 0) return "[]";
+                StringBuilder sb = new StringBuilder("[");
+                boolean first = true;
+                for (File f : files) {
+                    try {
+                        byte[] data = new byte[(int) f.length()];
+                        try (FileInputStream in = new FileInputStream(f)) {
+                            //noinspection ResultOfMethodCallIgnored
+                            in.read(data);
+                        }
+                        String json = new String(data, StandardCharsets.UTF_8);
+                        if (!first) sb.append(",");
+                        first = false;
+                        sb.append(json);
+                    } catch (Exception ignored) {}
+                }
+                sb.append("]");
+                return sb.toString();
+            } catch (Exception e) {
+                return "[]";
+            }
+        }
+
+        @JavascriptInterface
+        public void deleteCase(String caseId) {
+            try {
+                File f = new File(casesDir(), caseId + ".json");
+                //noinspection ResultOfMethodCallIgnored
+                f.delete();
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
         public void requestDocumentCapture(String caseId, String consentId) {
             pendingCaseId = caseId != null ? caseId : "";
             runOnUiThread(() -> {
@@ -119,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
                 pick.setType("image/*");
                 pick.addCategory(Intent.CATEGORY_OPENABLE);
                 try {
-                    cameraFile = new File(vaultDir(), "cap_" + System.currentTimeMillis() + ".jpg");
+                    cameraFile = new File(vaultDir(pendingCaseId), "cap_" + System.currentTimeMillis() + ".jpg");
                     cameraUri = FileProvider.getUriForFile(
                         MainActivity.this, "inc.cubitsystems.ontrac.fileprovider", cameraFile);
                     Intent cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -157,8 +230,7 @@ public class MainActivity extends AppCompatActivity {
         public void openExternal(String url) {
             runOnUiThread(() -> {
                 try {
-                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(i);
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                 } catch (Exception e) {
                     Toast.makeText(MainActivity.this, "Cannot open link", Toast.LENGTH_SHORT).show();
                 }
