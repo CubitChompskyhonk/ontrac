@@ -73,6 +73,7 @@
     <div class="stage" id="stage">—</div>
     <div class="vault" id="vaultInfo">Case vault: empty</div>
     <div class="vault" id="craGuideBox" style="display:none;margin-top:8px"></div>
+    <div class="vault" id="callOutBox" style="display:none;margin-top:8px"></div>
     <button type="button" class="secondary" id="btnVault" style="margin-top:10px">Open case vault</button>
   </div>
 
@@ -211,7 +212,7 @@
                 window.OnTracNative.shareOutreach("Request for T4 / income slips — " + years, letter);
               }
             } catch (e) {}
-            setTimeout(function () { location.href = "call_script.html"; }, 900);
+            setTimeout(function () { location.href = "call_script.html?id=" + encodeURIComponent(state.caseId); }, 900);
             return { log: "Letter ready · share opened · call script opening.", letter: letter, script: scriptText || "See call_script.html" };
           }
         },
@@ -281,6 +282,13 @@
       cg.textContent = "CRA guide: access=" + state.craGuide.access + " · years=" + state.craGuide.yearsStatus +
         (state.craGuide.notes ? (" · " + state.craGuide.notes) : "");
     } else { cg.style.display = "none"; }
+    var co = document.getElementById("callOutBox");
+    if (state.callOutcome) {
+      co.style.display = "block";
+      co.textContent = "Call: " + state.callOutcome.result +
+        (state.callOutcome.reference ? (" · ref " + state.callOutcome.reference) : "") +
+        (state.callOutcome.notes ? (" · " + state.callOutcome.notes) : "");
+    } else if (co) { co.style.display = "none"; }
     var t = current();
     ["execLog", "letterBox", "scriptBox"].forEach(function (id) {
       document.getElementById(id).classList.remove("show");
