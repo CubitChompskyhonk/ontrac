@@ -24,10 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * OnTrac WD1: durable case files on disk + vault capture.
- * Cases survive process death (not only localStorage).
- */
 public class MainActivity extends AppCompatActivity {
     private static final int REQ_PICK = 1001;
     private WebView webView;
@@ -67,7 +63,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private File vaultDir(String caseId) {
-        File dir = new File(getFilesDir(), "case_vault/" + (caseId == null || caseId.isEmpty() ? "default" : caseId));
+        String id = (caseId == null || caseId.isEmpty()) ? "default" : caseId;
+        File dir = new File(getFilesDir(), "case_vault/" + id);
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
         return dir;
@@ -93,6 +90,11 @@ public class MainActivity extends AppCompatActivity {
     private String esc(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n").replace("\r", "");
+    }
+
+    private static String jsonEsc(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Override
@@ -184,7 +186,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception ignored) {}
         }
 
-
         @JavascriptInterface
         public String listVault(String caseId) {
             try {
@@ -197,10 +198,8 @@ public class MainActivity extends AppCompatActivity {
                     if (!f.isFile()) continue;
                     if (!first) sb.append(",");
                     first = false;
-                    String name = f.getName().replace("\", "\\").replace("\"", "\\"");
-                    String path = f.getAbsolutePath().replace("\", "/").replace("\"", "\\"");
-                    sb.append("{\"name\":\"").append(name).append("\"");
-                    sb.append(",\"path\":\"").append(path).append("\"");
+                    sb.append("{\"name\":\"").append(jsonEsc(f.getName())).append("\"");
+                    sb.append(",\"path\":\"").append(jsonEsc(f.getAbsolutePath())).append("\"");
                     sb.append(",\"size\":").append(f.length());
                     sb.append(",\"modified\":").append(f.lastModified());
                     sb.append("}");
@@ -259,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
                 //noinspection ResultOfMethodCallIgnored
                 in.read(data);
                 in.close();
-                return new String(data);
+                return new String(data, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 return "";
             }
