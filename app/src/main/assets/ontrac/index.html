@@ -51,7 +51,7 @@
   </style>
 </head>
 <body>
-  <div class="brand">ONTRAC · WD1</div>
+  <div class="brand">ONTRAC · WD2</div>
   <h1>Your cases</h1>
   <p class="tagline">Stored on this device. Survive app kill. One button when you open a case.</p>
   <div class="poem">
@@ -63,12 +63,28 @@
     <div class="label">Open or resume</div>
     <div id="list"></div>
     <button type="button" class="primary" id="btnNew">Start tax recovery case</button>
+    <button type="button" class="secondary" id="btnExport">Export all consent logs</button>
+    <button type="button" class="secondary" id="btnRules">Review rules again</button>
   </div>
 
   <p class="foot">Cubit · Durable cases · Representation through consent</p>
 
   <script>
 (function () {
+
+  // WD2 first-run gate
+  (function () {
+    try {
+      if (!localStorage.getItem("ontrac_onboarding_v1")) {
+        location.replace("onboarding.html");
+        return;
+      }
+    } catch (e) {
+      location.replace("onboarding.html");
+      return;
+    }
+  })();
+
   function listCases() {
     try {
       if (window.OnTracNative && OnTracNative.listCases) {
@@ -116,6 +132,33 @@
   document.getElementById("btnNew").onclick = function () {
     location.href = "case.html?new=1";
   };
+
+  document.getElementById("btnExport").onclick = function () {
+    var cases = listCases().filter(function (c) { return c && c.caseId; });
+    var onboarding = null;
+    try { onboarding = JSON.parse(localStorage.getItem("ontrac_onboarding_v1") || "null"); } catch (e) {}
+    var payload = {
+      exportedAt: new Date().toISOString(),
+      onboarding: onboarding,
+      cases: cases.map(function (c) {
+        return { caseId: c.caseId, title: c.title, years: c.years, consent: c.consent || [] };
+      })
+    };
+    var text = JSON.stringify(payload, null, 2);
+    try {
+      if (window.OnTracNative && OnTracNative.shareOutreach) {
+        OnTracNative.shareOutreach("OnTrac consent log export", text);
+      } else {
+        prompt("Copy consent export", text);
+      }
+    } catch (e) {
+      prompt("Copy consent export", text);
+    }
+  };
+  document.getElementById("btnRules").onclick = function () {
+    location.href = "onboarding.html";
+  };
+
   render();
 })();
   </script>
