@@ -83,6 +83,7 @@
     <div class="script" id="scriptBox"></div>
     <button type="button" class="approve" id="btnApprove">Approve — do this for me</button>
     <button type="button" class="secondary" id="btnDefer">Pause case</button>
+    <button type="button" class="secondary" id="btnExportCase">Export this case consent log</button>
   </div>
 
   <div class="card">
@@ -320,6 +321,22 @@
   }
 
   document.getElementById("btnApprove").onclick = approve;
+  document.getElementById("btnExportCase").onclick = function () {
+    var payload = {
+      exportedAt: new Date().toISOString(),
+      caseId: state.caseId,
+      title: state.title,
+      years: state.years,
+      consent: state.consent || [],
+      stage: state.stage
+    };
+    var text = JSON.stringify(payload, null, 2);
+    try {
+      if (window.OnTracNative && OnTracNative.shareOutreach)
+        OnTracNative.shareOutreach("OnTrac case consent " + state.caseId, text);
+      else prompt("Copy", text);
+    } catch (e) { prompt("Copy", text); }
+  };
   document.getElementById("btnDefer").onclick = function () {
     var t = current();
     if (t) state.consent.unshift({ summary: t.title, decision: "pause" });
