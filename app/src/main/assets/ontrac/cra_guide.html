@@ -43,6 +43,15 @@
     <div class="n">STEP 2 · CRA GenAI CHATBOT (GENERAL ONLY)</div>
     <p>CRA’s GenAI chatbot answers general program questions 24/7. <strong>Do not enter SIN, name, or account details.</strong></p>
     <p class="warn">OnTrac opens the official page. Copy a safe prompt below — never paste personal data into the bot.</p>
+    <label>Safe prompt (no personal data)</label>
+    <select id="promptPick" onchange="document.getElementById('safePrompt').textContent=this.value">
+      <option>How do I register for a CRA account if I am locked out?</option>
+      <option>How do I recover my CRA user ID or password?</option>
+      <option>What is the difference between Level 1 and Level 2 representative authorization?</option>
+      <option>How do I find T4 slips in My Account?</option>
+      <option>How do I check if a tax return was filed for a previous year?</option>
+      <option>Where do I authorize a representative for my CRA account?</option>
+    </select>
     <div class="prompt" id="safePrompt">How do I register for a CRA account if I am locked out?</div>
     <button class="sec" type="button" onclick="copyPrompt()">Copy safe prompt</button>
     <button class="go" type="button" onclick="openLink('https://www.canada.ca/en/revenue-agency/corporate/contact-information/cra-chatbot.html')">Open CRA GenAI chatbot page</button>
